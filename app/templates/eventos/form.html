@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Editar evento' if evento else 'Nuevo evento' }}{% endblock %}
+{% block content %}
+<h1 class="h3 mb-4">{{ 'Editar evento' if evento else 'Nuevo evento' }}</h1>
+<form method="post" class="bg-white p-4 rounded shadow-sm" style="max-width: 640px;">
+  <div class="mb-3">
+    <label class="form-label">Nombre del evento</label>
+    <input type="text" name="nombre" class="form-control" required
+           value="{{ (datos.nombre if datos else evento.nombre) or '' }}">
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Descripción</label>
+    <textarea name="descripcion" class="form-control" rows="3">{{ (datos.descripcion if datos else evento.descripcion) or '' }}</textarea>
+  </div>
+  <div class="row">
+    <div class="col-md-6 mb-3">
+      <label class="form-label">Fecha</label>
+      <input type="date" name="fecha" class="form-control" required
+             value="{{ (datos.fecha if datos else evento.fecha) or '' }}">
+    </div>
+    <div class="col-md-6 mb-3">
+      <label class="form-label">Hora</label>
+      <input type="time" name="hora" class="form-control"
+             value="{{ (datos.hora if datos else evento.hora) or '' }}">
+    </div>
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Lugar</label>
+    <input type="text" name="lugar" class="form-control" required
+           value="{{ (datos.lugar if datos else evento.lugar) or '' }}">
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Imagen (URL, opcional)</label>
+    <input type="url" name="imagen_url" class="form-control"
+           value="{{ (datos.imagen_url if datos else evento.imagen_url) or '' }}">
+  </div>
+  <button type="submit" class="btn btn-primary">Guardar</button>
+  <a href="{{ url_for('eventos.listado') }}" class="btn btn-link">Cancelar</a>
+</form>
+{% endblock %}

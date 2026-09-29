@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Procesando pago{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6 text-center">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">Estamos confirmando tu pago…</h5>
+        <p class="text-muted">
+          Mercado Pago puede tardar unos segundos en avisarnos que se acreditó. Si ya
+          pagaste, esperá un momento y actualizá esta página.
+        </p>
+        {% if orden_id %}
+          <a href="{{ url_for('compras.pagar', orden_id=orden_id) }}" class="btn btn-primary">
+            Actualizar estado
+          </a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

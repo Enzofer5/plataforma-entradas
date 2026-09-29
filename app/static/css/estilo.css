@@ -1,0 +1,155 @@
+/* ============================================================
+   Matrix Code — identidad visual
+   Negro + verde neón (paleta del isologo MC), aplicado sobre
+   Bootstrap 5 sin perder legibilidad en formularios y tablas.
+   ============================================================ */
+
+:root {
+  --mc-negro: #05080a;
+  --mc-negro-suave: #0d1410;
+  --mc-verde-neon: #39ff8c;
+  --mc-verde: #17c964;
+  --mc-verde-oscuro: #0e7d3f;
+  --mc-texto-claro: #e8fff0;
+
+  --bs-primary: var(--mc-verde);
+  --bs-primary-rgb: 23, 201, 100;
+  --bs-link-color: var(--mc-verde-oscuro);
+  --bs-link-hover-color: var(--mc-verde);
+}
+
+body {
+  background-color: #f4f7f5;
+}
+
+/* ---------- Navbar ---------- */
+.navbar.mc-navbar {
+  background: var(--mc-negro) !important;
+  border-bottom: 1px solid var(--mc-verde-oscuro);
+  box-shadow: 0 0 18px rgba(57, 255, 140, 0.15);
+}
+
+.mc-navbar .navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--mc-texto-claro) !important;
+}
+
+.mc-navbar .navbar-brand img {
+  height: 34px;
+  width: 34px;
+  border-radius: 6px;
+  filter: drop-shadow(0 0 6px rgba(57, 255, 140, 0.65));
+}
+
+.mc-navbar .btn-outline-light {
+  border-color: var(--mc-verde);
+  color: var(--mc-verde-neon);
+}
+
+.mc-navbar .btn-outline-light:hover {
+  background-color: var(--mc-verde);
+  border-color: var(--mc-verde);
+  color: #04170c;
+}
+
+.mc-navbar .btn-light {
+  background-color: var(--mc-verde);
+  border-color: var(--mc-verde);
+  color: #04170c;
+  font-weight: 600;
+}
+
+.mc-navbar .btn-light:hover {
+  background-color: var(--mc-verde-neon);
+  border-color: var(--mc-verde-neon);
+}
+
+/* ---------- Botones y enlaces ---------- */
+.btn-primary {
+  background-color: var(--mc-verde);
+  border-color: var(--mc-verde);
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active {
+  background-color: var(--mc-verde-oscuro) !important;
+  border-color: var(--mc-verde-oscuro) !important;
+}
+
+.btn-outline-primary {
+  color: var(--mc-verde-oscuro);
+  border-color: var(--mc-verde);
+}
+
+.btn-outline-primary:hover {
+  background-color: var(--mc-verde);
+  border-color: var(--mc-verde);
+  color: #04170c;
+}
+
+.btn-check:checked + .btn-outline-primary,
+.btn-outline-dark:hover {
+  background-color: var(--mc-negro);
+  border-color: var(--mc-negro);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: #0c2417;
+}
+
+a {
+  color: var(--bs-link-color);
+}
+
+/* ---------- Componentes con acento de marca ---------- */
+.badge.bg-success {
+  background-color: var(--mc-verde) !important;
+}
+
+.card {
+  border-color: rgba(14, 125, 63, 0.15);
+}
+
+.card .btn-primary,
+.card .btn-outline-primary {
+  --bs-btn-font-weight: 600;
+}
+
+.alert-success {
+  background-color: rgba(23, 201, 100, 0.12);
+  border-color: var(--mc-verde);
+  color: #0c2417;
+}
+
+/* ---------- Footer ---------- */
+.mc-footer {
+  background: var(--mc-negro);
+  color: rgba(232, 255, 240, 0.75);
+  margin-top: 4rem;
+  padding: 1.75rem 0;
+  border-top: 1px solid var(--mc-verde-oscuro);
+}
+
+.mc-footer .mc-footer-marca {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--mc-verde-neon);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.mc-footer .mc-footer-marca img {
+  height: 22px;
+  width: 22px;
+  border-radius: 5px;
+}
+
+.mc-footer a {
+  color: var(--mc-verde-neon);
+}

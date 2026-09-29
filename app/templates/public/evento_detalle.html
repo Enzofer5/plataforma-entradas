@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}{{ evento.nombre }}{% endblock %}
+{% block content %}
+<div class="row">
+  <div class="col-md-8">
+    {% if evento.imagen_url %}
+      <img src="{{ evento.imagen_url }}" class="img-fluid rounded mb-3" alt="{{ evento.nombre }}">
+    {% endif %}
+    <h1>{{ evento.nombre }}</h1>
+    <p class="text-muted">
+      {{ evento.fecha|fecha_es }}{% if evento.hora %} — {{ evento.hora }}{% endif %}
+      · {{ evento.lugar }}
+    </p>
+    <p>{{ evento.descripcion }}</p>
+  </div>
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">Entradas</h5>
+        {% if not tipos %}
+          <p class="text-muted">Sin entradas disponibles todavía.</p>
+        {% else %}
+          <ul class="list-group list-group-flush mb-3">
+            {% for tipo in tipos %}
+            <li class="list-group-item d-flex justify-content-between">
+              <span>{{ tipo.nombre }}</span>
+              <strong>${{ "%.2f"|format(tipo.precio) }}</strong>
+            </li>
+            {% endfor %}
+          </ul>
+          <a href="{{ url_for('compras.comprar', slug=evento.slug) }}" class="btn btn-primary w-100">
+            Comprar entradas
+          </a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

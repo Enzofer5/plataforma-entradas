@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Pagar — {{ evento.nombre }}{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">Resumen de tu compra</h5>
+        <p class="text-muted">{{ evento.nombre }} — {{ evento.fecha|fecha_es }}</p>
+        <ul class="list-group list-group-flush mb-3">
+          {% for item in items %}
+          <li class="list-group-item d-flex justify-content-between">
+            <span>{{ item.cantidad }}x {{ item.tipo_nombre }}</span>
+            <strong>${{ "%.2f"|format(item.cantidad * item.precio_unitario) }}</strong>
+          </li>
+          {% endfor %}
+        </ul>
+        <div class="d-flex justify-content-between">
+          <span>Subtotal entradas</span>
+          <span>${{ "%.2f"|format(orden.subtotal or orden.total) }}</span>
+        </div>
+        {% if orden.recargo_total %}
+        <div class="d-flex justify-content-between text-muted small mb-2">
+          <span>Cargo por servicio ({{ orden.recargo_porcentaje_aplicado|round|int }}%)</span>
+          <span>${{ "%.2f"|format(orden.recargo_total) }}</span>
+        </div>
+        {% endif %}
+        <div class="d-flex justify-content-between mb-4 border-top pt-2">
+          <strong>Total</strong>
+          <strong>${{ "%.2f"|format(orden.total) }}</strong>
+        </div>
+
+        {% if mp_configurado %}
+          <div class="alert alert-danger small">
+            No pudimos conectar con Mercado Pago para iniciar el pago. Probá de nuevo en
+            un momento.
+          </div>
+          <a href="{{ url_for('compras.pagar', orden_id=orden.id) }}" class="btn btn-primary w-100">
+            Reintentar
+          </a>
+        {% else %}
+          <div class="alert alert-warning small">
+            Todavía no está conectado el pago real con Mercado Pago — este botón simula el
+            pago para probar el circuito completo.
+          </div>
+
+          <form method="post">
+            <button type="submit" class="btn btn-success w-100">
+              Pagar (simulado) ${{ "%.2f"|format(orden.total) }}
+            </button>
+          </form>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

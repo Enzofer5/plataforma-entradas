@@ -1,0 +1,6 @@
+Flask>=3.0
+python-dotenv>=1.0
+mercadopago>=2.2
+requests>=2.31
+qrcode>=7.4
+Pillow>=10.0

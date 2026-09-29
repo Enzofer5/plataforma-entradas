@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Validar entradas — {{ evento.nombre }}{% endblock %}
+{% block content %}
+<h1 class="h3 mb-1">{{ evento.nombre }}</h1>
+<p class="text-muted mb-4">Validación de entradas en el ingreso</p>
+
+<div class="row">
+  <div class="col-md-6">
+    <div class="card mb-4">
+      <div class="card-body">
+        <h5 class="card-title">Escanear QR</h5>
+        <div id="lector-qr" style="width: 100%;"></div>
+        <p class="text-muted small mt-2 mb-0">
+          Si el navegador pide permiso de cámara, aceptalo. Si no hay cámara disponible,
+          usá la carga manual de abajo.
+        </p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">Carga manual</h5>
+        <form method="post" id="form-manual">
+          <div class="input-group">
+            <input type="text" name="codigo" id="input-codigo" class="form-control"
+                   placeholder="Pegá o escribí el código" autofocus>
+            <button type="submit" class="btn btn-primary">Validar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-6">
+    {% if resultado %}
+      <div class="alert alert-{{ 'success' if resultado.ok else 'danger' }}">
+        <h5 class="alert-heading mb-1">{{ resultado.mensaje }}</h5>
+        {% if resultado.tipo_nombre %}
+          <p class="mb-0">Tipo de entrada: {{ resultado.tipo_nombre }}</p>
+        {% endif %}
+      </div>
+    {% endif %}
+
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">Resumen</h5>
+        <p class="mb-1">Entradas vendidas: <strong>{{ stats.total or 0 }}</strong></p>
+        <p class="mb-0">Ya ingresaron: <strong>{{ stats.usadas or 0 }}</strong></p>
+      </div>
+    </div>
+
+    <a href="{{ url_for('eventos.listado') }}" class="btn btn-link mt-3">&larr; Volver a mis eventos</a>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script>
+  const form = document.getElementById("form-manual");
+  const input = document.getElementById("input-codigo");
+
+  function enviarCodigo(codigo) {
+    input.value = codigo;
+    form.submit();
+  }
+
+  if (window.Html5Qrcode) {
+    const lector = new Html5Qrcode("lector-qr");
+    Html5Qrcode.getCameras().then((camaras) => {
+      if (camaras && camaras.length) {
+        lector.start(
+          { facingMode: "environment" },
+          { fps: 10, qrbox: 250 },
+          (textoDecodificado) => {
+            lector.stop().then(() => enviarCodigo(textoDecodificado));
+          },
+          () => {}
+        );
+      } else {
+        document.getElementById("lector-qr").innerHTML =
+          '<p class="text-muted small mb-0">No se detectó ninguna cámara disponible.</p>';
+      }
+    }).catch(() => {
+      document.getElementById("lector-qr").innerHTML =
+        '<p class="text-muted small mb-0">No se pudo acceder a la cámara.</p>';
+    });
+  }
+</script>
+{% endblock %}

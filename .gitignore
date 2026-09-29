@@ -1,0 +1,34 @@
+__pycache__/
+*.pyc
+.env
+instance/
+venv/
+.venv/
+
+# Entornos y secretos
+.env
+.env.*
+!.env.example
+venv/
+.venv/
+__pycache__/
+*.pyc
+node_modules/
+# Bases de datos y datos locales
+*.db
+*.sqlite
+*.sqlite3
+instance/
+backups/
+*backup*
+static/uploads/*
+!static/uploads/.gitkeep
+# Build y varios
+dist/
+build/
+*.zip
+.vscode/
+.DS_Store
+Thumbs.db
+desktop.ini
+static/pdfs/**/*.pdf

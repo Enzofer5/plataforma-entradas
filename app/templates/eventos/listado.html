@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Mis eventos{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1 class="h3 mb-0">Mis eventos</h1>
+  <a href="{{ url_for('eventos.nuevo') }}" class="btn btn-primary">+ Nuevo evento</a>
+</div>
+
+{% if not eventos %}
+  <p class="text-muted">Todavía no creaste ningún evento.</p>
+{% else %}
+  <div class="table-responsive">
+    <table class="table bg-white align-middle">
+      <thead>
+        <tr>
+          <th>Evento</th>
+          <th>Fecha</th>
+          <th>Estado</th>
+          <th>Entradas</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for evento in eventos %}
+        <tr>
+          <td>{{ evento.nombre }}</td>
+          <td>{{ evento.fecha|fecha_es }}</td>
+          <td>
+            {% if evento.estado == "publicado" %}
+              <span class="badge bg-success">Publicado</span>
+            {% elif evento.estado == "finalizado" %}
+              <span class="badge bg-secondary">Finalizado</span>
+            {% else %}
+              <span class="badge bg-warning text-dark">Borrador</span>
+            {% endif %}
+          </td>
+          <td>
+            <a href="{{ url_for('eventos.tipos_entrada', evento_id=evento.id) }}">Gestionar</a>
+          </td>
+          <td class="text-end">
+            <a href="{{ url_for('eventos.editar', evento_id=evento.id) }}" class="btn btn-sm btn-outline-secondary">Editar</a>
+            {% if evento.estado == "publicado" %}
+              <a href="{{ url_for('public.evento_detalle', slug=evento.slug) }}" target="_blank" class="btn btn-sm btn-outline-primary">Ver página</a>
+              <a href="{{ url_for('eventos.validar', evento_id=evento.id) }}" class="btn btn-sm btn-outline-dark">Validar entradas</a>
+            {% endif %}
+            <form method="post" action="{{ url_for('eventos.publicar', evento_id=evento.id) }}" class="d-inline">
+              <button type="submit" class="btn btn-sm btn-outline-{{ 'warning' if evento.estado == 'publicado' else 'success' }}">
+                {{ 'Pasar a borrador' if evento.estado == 'publicado' else 'Publicar' }}
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endif %}
+{% endblock %}
