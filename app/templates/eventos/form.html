@@ -1,0 +1,93 @@
+{% extends "eventos/_panel.html" %}
+{% from "eventos/_evento_nav.html" import cabecera_evento %}
+{% block title %}{{ 'Editar evento' if evento else 'Nuevo evento' }}{% endblock %}
+{% block panel %}
+{% if evento %}{{ cabecera_evento(evento) }}{% else %}
+<div class="pc-panel-cabecera"><div><div class="seccion">Organizador</div><h1>Nuevo evento</h1></div></div>
+{% endif %}
+<form method="post" enctype="multipart/form-data" class="pc-card" style="max-width: 640px;">
+  <div class="mb-3">
+    <label class="form-label">Nombre del evento</label>
+    <input type="text" name="nombre" class="form-control" required
+           value="{{ (datos.nombre if datos else evento.nombre) or '' }}">
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Descripción</label>
+    <textarea name="descripcion" class="form-control" rows="3">{{ (datos.descripcion if datos else evento.descripcion) or '' }}</textarea>
+  </div>
+  <div class="row">
+    <div class="col-md-6 mb-3">
+      <label class="form-label">Fecha</label>
+      <input type="date" name="fecha" class="form-control" required
+             value="{{ (datos.fecha if datos else evento.fecha) or '' }}">
+    </div>
+    <div class="col-md-6 mb-3">
+      <label class="form-label">Hora</label>
+      <input type="time" name="hora" class="form-control"
+             value="{{ (datos.hora if datos else evento.hora) or '' }}">
+    </div>
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Lugar</label>
+    <input type="text" name="lugar" class="form-control" required
+           value="{{ (datos.lugar if datos else evento.lugar) or '' }}">
+  </div>
+  {% set imagen_actual = (datos.imagen_url if datos else (evento.imagen_url if evento else '')) or '' %}
+  <div class="mb-3">
+    <label class="form-label">Imagen del evento (flyer o portada)</label>
+    <div class="mc-evento-img rounded-3 mb-2" style="max-width: 360px;">
+      <img id="vista-previa" src="{{ imagen_actual }}" alt="Vista previa"
+           {% if not imagen_actual %}style="display: none;"{% endif %}>
+      <div class="mc-placeholder" id="vista-previa-vacia" {% if imagen_actual %}style="display: none;"{% endif %}>🖼️</div>
+    </div>
+    <input type="file" name="imagen" id="imagen" class="form-control" accept="image/jpeg,image/png,image/webp,image/gif">
+    <div class="form-text">JPG, PNG, WEBP o GIF, hasta 5 MB. Se ve mejor horizontal (16:10).</div>
+  </div>
+  <div class="mb-4">
+    <label class="form-label small text-muted">…o pegá el link de una imagen</label>
+    <div class="input-group">
+      <input type="text" name="imagen_url" id="imagen_url" class="form-control" placeholder="https://..."
+             value="{{ imagen_actual }}">
+      {% if imagen_actual %}
+        <button type="button" class="btn btn-outline-danger" id="quitar-imagen">Quitar imagen</button>
+      {% endif %}
+    </div>
+  </div>
+  <button type="submit" class="btn btn-primary">Guardar</button>
+  <a href="{{ url_for('eventos.detalle', evento_id=evento.id) if evento else url_for('eventos.listado') }}" class="btn btn-link">Cancelar</a>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  (function () {
+    const archivo = document.getElementById("imagen");
+    const link = document.getElementById("imagen_url");
+    const vista = document.getElementById("vista-previa");
+    const vacia = document.getElementById("vista-previa-vacia");
+    const quitar = document.getElementById("quitar-imagen");
+
+    function mostrar(src) {
+      vista.style.display = src ? "" : "none";
+      vacia.style.display = src ? "none" : "";
+      if (src) vista.src = src;
+    }
+
+    archivo.addEventListener("change", function () {
+      if (archivo.files && archivo.files[0]) {
+        mostrar(URL.createObjectURL(archivo.files[0]));
+      }
+    });
+    link.addEventListener("change", function () {
+      if (!archivo.files.length) mostrar(link.value.trim());
+    });
+    if (quitar) {
+      quitar.addEventListener("click", function () {
+        link.value = "";
+        archivo.value = "";
+        mostrar("");
+      });
+    }
+  })();
+</script>
+{% endblock %}

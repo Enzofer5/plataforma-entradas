@@ -1,0 +1,56 @@
+{% extends "admin/_base.html" %}
+{% block title %}Mi cuenta de dueño{% endblock %}
+{% block titulo_admin %}Mi cuenta{% endblock %}
+{% block contenido_admin %}
+<div class="row">
+  <div class="col-lg-6">
+    <form method="post" class="mc-panel">
+      <div class="mb-3">
+        <label class="form-label">Nombre</label>
+        <input type="text" name="nombre" class="form-control" value="{{ g.admin.nombre }}" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Email para entrar al panel</label>
+        <input type="email" name="email" class="form-control" value="{{ g.admin.email }}" required>
+      </div>
+      <hr>
+      <p class="small text-muted mb-2">Para cambiar la contraseña completá estos dos campos; si no, dejalos vacíos.</p>
+      <div class="row g-2 mb-3">
+        <div class="col-sm-6">
+          <label class="form-label">Contraseña nueva</label>
+          <input type="password" name="password" class="form-control" minlength="8" autocomplete="new-password">
+        </div>
+        <div class="col-sm-6">
+          <label class="form-label">Repetila</label>
+          <input type="password" name="password_confirm" class="form-control" minlength="8" autocomplete="new-password">
+        </div>
+      </div>
+      <hr>
+      <div class="mb-3">
+        <label class="form-label">Tu contraseña actual <span class="text-danger">*</span></label>
+        <input type="password" name="password_actual" class="form-control" required autocomplete="current-password">
+        <div class="form-text">Para confirmar que sos vos.</div>
+      </div>
+      <button type="submit" class="btn btn-primary w-100">Guardar cambios</button>
+    </form>
+  </div>
+  <div class="col-lg-6">
+    <div class="pc-card">
+      <h5 class="mb-1">✉️ Envío de entradas por mail</h5>
+      <p class="small text-muted">Cuando se confirma un pago, el comprador recibe un mail con sus entradas y el QR de cada una.</p>
+      {% if smtp_ok %}
+        <div class="alert alert-success small py-2">✓ Correo configurado: sale desde <strong>{{ smtp_usuario }}</strong>.</div>
+      {% else %}
+        <div class="alert alert-warning small py-2">
+          Todavía no está configurado: completá <code>SMTP_HOST</code>, <code>SMTP_USER</code> y
+          <code>SMTP_PASSWORD</code> en el archivo <code>.env</code> y reiniciá la app.
+          Mientras tanto, las entradas se ven igual en la pantalla de confirmación.
+        </div>
+      {% endif %}
+      <form method="post" action="{{ url_for('admin.correo_prueba') }}" class="d-grid">
+        <button type="submit" class="btn btn-pc-borde" {{ 'disabled' if not smtp_ok }}>Enviarme un mail de prueba a {{ g.admin.email }}</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

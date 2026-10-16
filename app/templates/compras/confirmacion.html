@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}¡Compra confirmada!{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-7">
+    <div class="alert alert-success">
+      <h4 class="alert-heading">¡Listo, {{ orden.comprador_nombre }}!</h4>
+      <p class="mb-0">
+        Tu compra para <strong>{{ evento.nombre }}</strong> quedó confirmada. Guardá los
+        códigos de tus entradas.
+      </p>
+    </div>
+
+    {% for entrada in entradas %}
+    <div class="card mb-3">
+      <div class="card-body d-flex justify-content-between align-items-center">
+        <div>
+          <div class="fw-semibold">{{ entrada.tipo_nombre }}</div>
+          <code>{{ entrada.codigo_unico }}</code>
+          <div class="mt-2">
+            <a href="{{ url_for('entradas.ver_entrada', codigo=entrada.codigo_unico) }}" class="btn btn-sm btn-outline-primary">
+              Ver entrada con QR
+            </a>
+          </div>
+        </div>
+        <span class="badge bg-success">Válida</span>
+      </div>
+    </div>
+    {% endfor %}
+
+    <p class="text-muted small">
+      Guardá el link de cada entrada (o el QR) — es lo que vas a mostrar en la puerta del
+      evento.
+    </p>
+  </div>
+</div>
+{% endblock %}

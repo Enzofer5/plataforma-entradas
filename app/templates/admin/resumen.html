@@ -1,0 +1,157 @@
+{% extends "admin/_base.html" %}
+{% import "_grafico.html" as graf %}
+{% block title %}Panel MatrixCode{% endblock %}
+{% block titulo_admin %}Panel de plataforma{% endblock %}
+{% block acciones_admin %}{{ graf.filtro_fechas(desde, hasta) }}{% endblock %}
+{% block contenido_admin %}
+<div class="row g-3 mb-3">
+  <div class="col-6 col-xl-3">
+    <div class="pc-kpi">
+      <div class="etiqueta">Comisiones hoy</div>
+      <div class="valor">{{ tarjetas.hoy|pesos }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="pc-kpi">
+      <div class="etiqueta">Comisiones del mes</div>
+      <div class="valor">{{ tarjetas.mes|pesos }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="pc-kpi">
+      <div class="etiqueta">Comisiones históricas</div>
+      <div class="valor">{{ tarjetas.historicas|pesos }}</div>
+      <div class="detalle">netas de reembolsos</div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="pc-kpi">
+      <div class="etiqueta">Comisión vigente</div>
+      <div class="valor">{{ describir_recargo(recargo.porcentaje, recargo.fijo) }}</div>
+      <div class="detalle"><a href="{{ url_for('admin.recargos') }}">Configurar</a></div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="pc-kpi">
+      <div class="etiqueta">Eventos</div>
+      <div class="valor">{{ eventos.total }}</div>
+      <div class="detalle">{{ eventos.publicados }} publicado{{ 's' if eventos.publicados != 1 }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="pc-kpi">
+      <div class="etiqueta">Entradas vendidas</div>
+      <div class="valor">{{ periodo.entradas }}</div>
+      <div class="detalle">en el período</div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="pc-kpi">
+      <div class="etiqueta">Facturación procesada</div>
+      <div class="valor">{{ periodo.facturado|pesos }}</div>
+      <div class="detalle">{{ periodo.compras }} compra{{ 's' if periodo.compras != 1 }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="pc-kpi">
+      <div class="etiqueta">Comisiones generadas</div>
+      <div class="valor">{{ periodo.comisiones|pesos }}</div>
+      <div class="detalle">en el período</div>
+    </div>
+  </div>
+</div>
+
+<div class="pc-card mb-3">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+    <h5 class="mb-0">Comisiones por día</h5>
+    <span class="pc-mono small text-muted">{{ desde|fecha_es }} - {{ hasta|fecha_es }}</span>
+  </div>
+  {% if periodo.compras %}
+    {{ graf.barras_por_dia("grafico-comisiones", serie, "Comisiones") }}
+  {% else %}
+    <p class="text-muted text-center py-5 mb-0 pc-mono">&gt; sin ventas en este período</p>
+  {% endif %}
+</div>
+
+<div class="pc-card mb-3">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="mb-0">Comisiones por evento</h5>
+    <a href="{{ url_for('admin.eventos') }}" class="btn btn-pc-borde btn-sm">Ver detalle</a>
+  </div>
+  {% if por_evento %}
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead><tr><th>Evento</th><th>Fecha</th><th>Estado</th><th class="text-end">Compras</th><th class="text-end">Entradas</th><th class="text-end">Facturación</th><th class="text-end">Comisiones</th></tr></thead>
+        <tbody>
+          {% for e in por_evento %}
+            <tr>
+              <td><span class="text-success fw-semibold">{{ e.nombre }}</span><div class="small text-muted">{{ e.organizador }}</div></td>
+              <td>{{ e.fecha|fecha_es }}</td>
+              <td>
+                {% if e.bloqueado %}<span class="badge bg-danger">Pausado</span>
+                {% elif e.estado == "publicado" %}<span class="badge bg-success">Publicado</span>
+                {% else %}<span class="badge bg-warning">Borrador</span>{% endif %}
+              </td>
+              <td class="text-end">{{ e.compras }}</td>
+              <td class="text-end">{{ e.entradas }}</td>
+              <td class="text-end">{{ e.facturado|pesos }}</td>
+              <td class="text-end fw-bold">{{ e.comisiones|pesos }}</td>
+            </tr>
+          {% endfor %}
+          <tr class="pc-fila-total">
+            <td colspan="3">TOTAL MATRIXCODE</td>
+            <td class="text-end">{{ periodo.compras }}</td>
+            <td class="text-end">{{ periodo.entradas }}</td>
+            <td class="text-end">{{ periodo.facturado|pesos }}</td>
+            <td class="text-end">{{ periodo.comisiones|pesos }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="text-muted mb-0">Sin ventas en este período.</p>
+  {% endif %}
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-8">
+    <div class="pc-card h-100">
+      <h5 class="mb-3">Últimas ventas</h5>
+      {% if ultimas %}
+        <div class="table-responsive">
+          <table class="table table-sm align-middle">
+            <thead><tr><th>Fecha</th><th>Evento</th><th>Comprador</th><th class="text-end">Total</th><th class="text-end">Comisión</th></tr></thead>
+            <tbody>
+              {% for o in ultimas %}
+                <tr>
+                  <td class="small pc-mono">{{ o.fecha_local[:10]|fecha_es }} {{ o.fecha_local[11:16] }}</td>
+                  <td class="small">{{ o.evento_nombre }}<div class="text-muted">{{ o.organizador_nombre }}</div></td>
+                  <td class="small">{{ o.comprador_nombre }}</td>
+                  <td class="text-end">{{ o.total|pesos }}</td>
+                  <td class="text-end fw-bold">{{ (o.recargo_total or 0)|pesos }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <p class="text-muted mb-0">Todavía no hay ventas.</p>
+      {% endif %}
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="pc-card h-100">
+      <h5 class="mb-3">Plataforma</h5>
+      <div class="d-flex justify-content-between py-1"><span class="text-muted">Clientes (organizadores)</span><strong>{{ cuentas.total }}</strong></div>
+      <div class="d-flex justify-content-between py-1"><span class="text-muted">Suspendidos</span><strong>{{ cuentas.suspendidos }}</strong></div>
+      <div class="d-flex justify-content-between py-1"><span class="text-muted">Modo de cobro</span><strong>{{ 'Centralizado' if modo_cobro == 'centralizado' else 'Cada organizador' }}</strong></div>
+      <div class="d-flex gap-2 mt-3">
+        <a href="{{ url_for('admin.cobros') }}" class="btn btn-pc btn-sm">Cobros</a>
+        <a href="{{ url_for('admin.organizadores') }}" class="btn btn-pc-borde btn-sm">Clientes</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}{{ graf.scripts() }}{% endblock %}

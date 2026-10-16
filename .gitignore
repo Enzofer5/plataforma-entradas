@@ -1,0 +1,61 @@
+# Entornos virtuales
+venv/
+.venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# Variables de entorno (credenciales). .env.example SÍ se sube.
+.env
+.env.*
+!.env.example
+
+# Imágenes que suben los organizadores (flyers de eventos)
+app/static/uploads/
+
+# Bases de datos locales
+instance/
+*.db
+*.sqlite
+*.sqlite3
+
+# Editores / sistema
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.log
+
+# Configuración local del editor/asistente
+.claude/
+
+# --- Agregado por Claude: proteger datos sensibles y archivos pesados ---
+.env
+.env.*
+!.env.example
+config.env
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+*backup*.sql
+*_backup*
+backups/
+cookies.txt
+*.log
+*.zip
+*.tgz
+__pycache__/
+*.pyc
+venv/
+.venv/
+node_modules/
+build/
+dist/
+instance/
+Claude outputs/
+ngrok*.txt

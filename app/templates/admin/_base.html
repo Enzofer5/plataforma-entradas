@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% import "_iconos.html" as ui %}
+{% from "_menu_dueno.html" import menu_dueno with context %}
+{# Esqueleto del panel del dueño (MatrixCode): menú lateral + contenido. #}
+{% block content %}
+{% set ep = request.endpoint %}
+{% macro item(endpoint, icono, texto) -%}
+  <a href="{{ url_for(endpoint) }}" class="{{ 'activo' if ep == endpoint }}">{{ ui.icono(icono) }}<span>{{ texto }}</span></a>
+{%- endmacro %}
+<div class="pc-panel">
+  <aside class="pc-sidebar" aria-label="Menú del dueño">
+    {{ menu_dueno(ep) }}
+  </aside>
+  <section class="min-w-0">
+    <div class="pc-panel-cabecera">
+      <div>
+        <div class="seccion">MatrixCode</div>
+        <h1>{% block titulo_admin %}{% endblock %}</h1>
+      </div>
+      {% block acciones_admin %}{% endblock %}
+    </div>
+    {% block contenido_admin %}{% endblock %}
+  </section>
+</div>
+{% endblock %}

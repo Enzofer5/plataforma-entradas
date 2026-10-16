@@ -1,0 +1,242 @@
+{% extends "eventos/_panel.html" %}
+{% from "eventos/_evento_nav.html" import cabecera_evento %}
+{% block title %}Reporte — {{ evento.nombre }}{% endblock %}
+{% block panel %}
+{{ cabecera_evento(evento) }}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <h5 class="mb-0">Reporte de ventas</h5>
+  <a href="{{ url_for('eventos.reporte_csv', evento_id=evento.id) }}" class="btn btn-pc btn-sm">⬇ Descargar Excel</a>
+</div>
+
+{% set pct_vendido = (entradas.vendidas * 100 / stock_total) if stock_total else 0 %}
+{% set pct_ingreso = (entradas.usadas * 100 / entradas.vendidas) if entradas.vendidas else 0 %}
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3">
+    <div class="mc-stat">
+      <div class="etiqueta">Recaudado neto</div>
+      <div class="valor">{{ neto|pesos }}</div>
+      <div class="detalle">
+        {% if resumen.descuentos %}{{ resumen.bruto|pesos }} − {{ resumen.descuentos|pesos }} en cupones{% else %}lo que te corresponde a vos{% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="mc-stat">
+      <div class="etiqueta">Entradas vendidas</div>
+      <div class="valor">{{ entradas.vendidas }}<span class="fs-6 text-muted"> / {{ stock_total }}</span></div>
+      <div class="progress mt-1" style="height: 6px;">
+        <div class="progress-bar bg-mc" style="width: {{ pct_vendido|round(0) }}%;"></div>
+      </div>
+      <div class="detalle mt-1">{{ pct_vendido|round(0)|int }}% del total</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="mc-stat">
+      <div class="etiqueta">Compras</div>
+      <div class="valor">{{ resumen.ordenes }}</div>
+      <div class="detalle">
+        {% if resumen.ordenes %}promedio {{ (neto / resumen.ordenes)|pesos }} por compra{% else %}todavía sin ventas{% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="mc-stat">
+      <div class="etiqueta">Ingresaron</div>
+      <div class="valor">{{ entradas.usadas }}<span class="fs-6 text-muted"> / {{ entradas.vendidas }}</span></div>
+      <div class="detalle">{{ pct_ingreso|round(0)|int }}% de las entradas validadas</div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-8">
+    <div class="mc-panel h-100">
+      <h5 class="mb-1">Entradas vendidas por día</h5>
+      <p class="text-muted small mb-3">Pasá el mouse sobre una barra para ver cuánto se recaudó ese día.</p>
+      {% if por_dia %}
+        <div style="position: relative; height: 280px;">
+          <canvas id="grafico-ventas" role="img"
+                  aria-label="Gráfico de barras: entradas vendidas por día. El detalle está en la tabla de abajo."></canvas>
+        </div>
+        <details class="mt-3">
+          <summary class="small text-muted">Ver como tabla</summary>
+          <table class="table table-sm mt-2 mb-0">
+            <thead><tr><th>Día</th><th class="text-end">Entradas</th><th class="text-end">Recaudado</th></tr></thead>
+            <tbody>
+              {% for dia in por_dia %}
+                <tr><td>{{ dia.dia|fecha_es }}</td><td class="text-end">{{ dia.entradas }}</td><td class="text-end">{{ dia.monto|pesos }}</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </details>
+      {% else %}
+        <div class="text-center text-muted py-5">
+          <div style="font-size: 2.5rem;">📈</div>
+          Cuando entren las primeras ventas, acá vas a ver cómo evolucionan día a día.
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="mc-panel h-100">
+      <h5 class="mb-3">Desglose</h5>
+      <ul class="list-unstyled mb-0">
+        <li class="d-flex justify-content-between gap-3 py-1"><span>Venta de entradas</span><strong>{{ resumen.bruto|pesos }}</strong></li>
+        <li class="d-flex justify-content-between gap-3 py-1 text-success"><span>Descuentos (cupones)</span><strong>−{{ resumen.descuentos|pesos }}</strong></li>
+        <li class="d-flex justify-content-between gap-3 py-1 border-top mt-1 pt-2"><span class="fw-semibold">Neto organizador</span><strong>{{ neto|pesos }}</strong></li>
+        <li class="d-flex justify-content-between gap-3 py-1 text-muted small"><span>Cargo por servicio (paga el comprador)</span><span>{{ resumen.recargos|pesos }}</span></li>
+        <li class="d-flex justify-content-between gap-3 py-1 text-muted small"><span>Total cobrado a compradores</span><span>{{ resumen.cobrado|pesos }}</span></li>
+      </ul>
+
+      {% if cupones_usados %}
+        <h6 class="mt-4 mb-2">Cupones más usados</h6>
+        {% for c in cupones_usados %}
+          <div class="d-flex justify-content-between align-items-center py-1">
+            <span class="mc-cupon-codigo small">{{ c.codigo }}</span>
+            <span class="small">{{ c.usos }} uso{{ 's' if c.usos != 1 }} · −{{ c.descuento_total|pesos }}</span>
+          </div>
+        {% endfor %}
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="col-12">
+    <div class="mc-panel">
+      <h5 class="mb-3">Por tipo de entrada</h5>
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Tipo</th>
+              <th class="text-end">Precio</th>
+              <th style="min-width: 160px;">Vendidas</th>
+              <th class="text-end">Recaudado</th>
+              <th class="text-end">Ingresaron</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for tipo in por_tipo %}
+              {% set pct = (tipo.stock_vendido * 100 / tipo.stock_total) if tipo.stock_total else 0 %}
+              <tr>
+                <td class="fw-semibold">{{ tipo.nombre }}</td>
+                <td class="text-end">{{ tipo.precio|pesos }}</td>
+                <td>
+                  <div class="small">{{ tipo.stock_vendido }} / {{ tipo.stock_total }}</div>
+                  <div class="progress" style="height: 6px;">
+                    <div class="progress-bar bg-mc" style="width: {{ pct|round(0) }}%;"></div>
+                  </div>
+                </td>
+                <td class="text-end">{{ tipo.recaudado|pesos }}</td>
+                <td class="text-end">{{ tipo.ingresaron }}</td>
+              </tr>
+            {% else %}
+              <tr><td colspan="5" class="text-muted">Este evento todavía no tiene tipos de entrada.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12">
+    <div class="mc-panel">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">Últimas compras</h5>
+        <span class="text-muted small">{{ ordenes|length }} en total</span>
+      </div>
+      {% if not ordenes %}
+        <p class="text-muted mb-0">Todavía no hay compras confirmadas.</p>
+      {% else %}
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-0">
+            <thead>
+              <tr><th>Fecha</th><th>Comprador</th><th>Entradas</th><th>Cupón</th><th class="text-end">Neto</th></tr>
+            </thead>
+            <tbody>
+              {% for o in ordenes[:25] %}
+                <tr>
+                  <td class="small">{{ o.dia_local|fecha_es }} {{ o.hora_local[:5] }}</td>
+                  <td>
+                    {{ o.comprador_nombre }}
+                    <div class="small text-muted">{{ o.comprador_email }}</div>
+                  </td>
+                  <td class="small">{{ o.detalle }}</td>
+                  <td>{% if o.cupon_codigo %}<span class="mc-cupon-codigo small">{{ o.cupon_codigo }}</span>{% endif %}</td>
+                  <td class="text-end">{{ ((o.subtotal if o.subtotal is not none else o.total) - (o.descuento or 0))|pesos }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% if ordenes|length > 25 %}
+          <p class="text-muted small mt-2 mb-0">Mostrando las últimas 25. Descargá el Excel para ver todas.</p>
+        {% endif %}
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if por_dia %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+  (function () {
+    const datos = {{ por_dia | map(attribute='dia') | list | tojson }};
+    const entradas = {{ por_dia | map(attribute='entradas') | list | tojson }};
+    const montos = {{ por_dia | map(attribute='monto') | list | tojson }};
+    const pesos = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
+    const etiquetas = datos.map(function (d) {
+      const [a, m, dia] = d.split("-");
+      return dia + "/" + m;
+    });
+
+    new Chart(document.getElementById("grafico-ventas"), {
+      type: "bar",
+      data: {
+        labels: etiquetas,
+        datasets: [{
+          label: "Entradas vendidas",
+          data: entradas,
+          backgroundColor: "#13ad5b",
+          hoverBackgroundColor: "#2bff88",
+          borderRadius: { topLeft: 4, topRight: 4 },
+          borderSkipped: "bottom",
+          maxBarThickness: 36,
+        }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: "#05080a",
+            padding: 10,
+            displayColors: false,
+            callbacks: {
+              title: function (items) { return datos[items[0].dataIndex].split("-").reverse().join("/"); },
+              label: function (item) {
+                return [item.parsed.y + " entrada" + (item.parsed.y === 1 ? "" : "s"),
+                        pesos.format(montos[item.dataIndex]) + " recaudados"];
+              },
+            },
+          },
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: "#8b9a92" } },
+          y: {
+            beginAtZero: true,
+            ticks: { precision: 0, color: "#8b9a92" },
+            grid: { color: "rgba(43, 255, 136, 0.07)" },
+            border: { display: false },
+          },
+        },
+      },
+    });
+  })();
+</script>
+{% endif %}
+{% endblock %}

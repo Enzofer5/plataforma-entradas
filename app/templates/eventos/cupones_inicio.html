@@ -1,0 +1,35 @@
+{% extends "eventos/_panel.html" %}
+{% block title %}Cupones{% endblock %}
+{% block panel %}
+<div class="pc-panel-cabecera">
+  <div>
+    <div class="seccion">Organizador</div>
+    <h1>Cupones de descuento</h1>
+  </div>
+</div>
+<p class="text-muted">Los cupones son por evento. Elegí uno para crear códigos con % o monto fijo, límite de usos y vencimiento.</p>
+
+<div class="pc-card p-0">
+  {% if eventos %}
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead><tr><th class="ps-3">Evento</th><th>Fecha</th><th class="text-end">Cupones</th><th class="text-end">Activos</th><th class="text-end">Usos</th><th></th></tr></thead>
+        <tbody>
+          {% for e in eventos %}
+            <tr>
+              <td class="ps-3 fw-semibold">{{ e.nombre }}</td>
+              <td>{{ e.fecha|fecha_es }}</td>
+              <td class="text-end">{{ e.cupones }}</td>
+              <td class="text-end">{{ e.activos }}</td>
+              <td class="text-end">{{ e.usos }}</td>
+              <td class="text-end pe-3"><a href="{{ url_for('eventos.cupones', evento_id=e.id) }}" class="btn btn-pc-borde btn-sm">Administrar</a></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="text-muted p-4 mb-0">Todavía no tenés eventos. <a href="{{ url_for('eventos.nuevo') }}">Creá el primero</a>.</p>
+  {% endif %}
+</div>
+{% endblock %}

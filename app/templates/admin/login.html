@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Acceso MatrixCode{% endblock %}
+{% block content %}
+<div class="pc-auth">
+  <div class="pc-auth-cabecera">
+    <div class="bienvenida">Acceso MatrixCode</div>
+    <h1>Panel</h1>
+    <p class="text-muted mb-0">Solo para la administración de la plataforma.</p>
+  </div>
+  <form method="post" class="pc-card">
+    <div class="mb-3">
+      <label class="form-label">Email</label>
+      <input type="email" name="email" class="form-control" value="{{ email }}" required autofocus autocomplete="email">
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Contraseña</label>
+      <input type="password" name="password" class="form-control" required autocomplete="current-password">
+    </div>
+    <button type="submit" class="btn btn-pc w-100 py-2">Entrar al panel</button>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% import "_iconos.html" as ui %}
+{% from "_menu_dueno.html" import menu_dueno with context %}
+{# Esqueleto del panel del organizador: menú lateral + contenido. #}
+{% block content %}
+{% set ep = request.endpoint %}
+{% macro item(endpoint, icono, texto, activos=()) -%}
+  <a href="{{ url_for(endpoint) }}" class="{{ 'activo' if ep == endpoint or ep in activos }}">{{ ui.icono(icono) }}<span>{{ texto }}</span></a>
+{%- endmacro %}
+<div class="pc-panel">
+  <aside class="pc-sidebar" aria-label="Menú del organizador">
+    {% if g.viendo_como_dueno %}
+    {{ menu_dueno(ep) }}
+    {% else %}
+    <div class="grupo">Organizador</div>
+    {{ item("eventos.panel", "dashboard", "Dashboard") }}
+    {{ item("eventos.listado", "eventos", "Eventos", ("eventos.nuevo", "eventos.detalle", "eventos.editar", "eventos.tipos_entrada", "eventos.reporte", "eventos.cupones", "eventos.validar")) }}
+    {{ item("eventos.ventas", "ventas", "Ventas") }}
+    {{ item("eventos.compradores", "compradores", "Compradores") }}
+    {{ item("eventos.ingreso", "ingreso", "Control de ingreso") }}
+    {{ item("eventos.cupones_inicio", "cupones", "Cupones") }}
+    <div class="grupo">Cuenta</div>
+    {{ item("auth.cuenta", "mercadopago", "Cobros y cuenta") }}
+    <a href="{{ url_for('auth.logout') }}">{{ ui.icono("salir") }}<span>Salir</span></a>
+    {% endif %}
+  </aside>
+  <section class="min-w-0">
+    {% block panel %}{% endblock %}
+  </section>
+</div>
+{% endblock %}

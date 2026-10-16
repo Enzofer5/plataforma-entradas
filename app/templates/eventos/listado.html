@@ -1,0 +1,77 @@
+{% extends "eventos/_panel.html" %}
+{% block title %}Mis eventos{% endblock %}
+{% block panel %}
+<div class="pc-panel-cabecera">
+  <div>
+    <div class="seccion">Organizador</div>
+    <h1>Eventos</h1>
+  </div>
+  <a href="{{ url_for('eventos.nuevo') }}" class="btn btn-pc">+ Nuevo evento</a>
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-6 col-lg-3">
+    <div class="pc-kpi">
+      <div class="etiqueta">Eventos</div>
+      <div class="valor">{{ totales.eventos }}</div>
+      <div class="detalle">{{ totales.publicados }} publicado{{ 's' if totales.publicados != 1 }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="pc-kpi">
+      <div class="etiqueta">Entradas vendidas</div>
+      <div class="valor">{{ totales.vendidas }}</div>
+      <div class="detalle">en todos tus eventos</div>
+    </div>
+  </div>
+  <div class="col-12 col-lg-6">
+    <div class="pc-kpi">
+      <div class="etiqueta">Recaudado (neto de descuentos)</div>
+      <div class="valor">{{ totales.recaudado|pesos }}</div>
+      <div class="detalle">sin contar el cargo por servicio, que paga el comprador</div>
+    </div>
+  </div>
+</div>
+
+{% if not eventos %}
+  <div class="pc-card text-center py-5">
+    <div class="pc-acceso mb-2">SIN EVENTOS</div>
+    <p class="text-muted">Creá tu primer evento, cargá las entradas y empezá a vender hoy.</p>
+    <a href="{{ url_for('eventos.nuevo') }}" class="btn btn-pc">Crear mi primer evento</a>
+  </div>
+{% else %}
+  <div class="d-flex flex-column gap-2">
+    {% for evento in eventos %}
+      {% set pct = (evento.vendidas * 100 / evento.stock_total) if evento.stock_total else 0 %}
+      {% set f = evento.fecha|fecha_larga %}
+      <a href="{{ url_for('eventos.detalle', evento_id=evento.id) }}" class="pc-fila-evento">
+        <div class="pc-fila-evento-img">
+          {% if evento.imagen_url %}<img src="{{ evento.imagen_url }}" alt="" loading="lazy">{% else %}<span>🎟️</span>{% endif %}
+        </div>
+        <div class="pc-fila-evento-fecha">
+          {% if f %}<span class="dia">{{ f.dia }}</span><span class="mes">{{ f.mes }}</span>{% endif %}
+        </div>
+        <div class="pc-fila-evento-info min-w-0">
+          <div class="d-flex flex-wrap align-items-center gap-2">
+            <strong class="text-truncate">{{ evento.nombre }}</strong>
+            {% if evento.bloqueado %}<span class="badge bg-danger">Pausado</span>
+            {% elif evento.estado == "publicado" %}<span class="badge bg-success">Publicado</span>
+            {% else %}<span class="badge bg-warning">Borrador</span>{% endif %}
+          </div>
+          <div class="small text-muted text-truncate">{{ evento.lugar }}{% if evento.hora %} · {{ evento.hora }} hs{% endif %}</div>
+          <div class="pc-fila-evento-ventas">
+            <div class="progress flex-fill" style="height: 5px;"><div class="progress-bar bg-mc" style="width: {{ pct|round(0) }}%;"></div></div>
+            <span class="pc-mono small">{{ evento.vendidas }}/{{ evento.stock_total }}</span>
+          </div>
+        </div>
+        <div class="pc-fila-evento-monto">
+          <strong>{{ evento.recaudado|pesos }}</strong>
+          <span class="small text-muted d-none d-sm-block">recaudado</span>
+        </div>
+        <span class="pc-fila-evento-flecha" aria-hidden="true">›</span>
+      </a>
+    {% endfor %}
+  </div>
+  <p class="small text-muted mt-2 mb-0">Tocá un evento para ver su panel: entradas, cupones, reporte, validar en la puerta y más.</p>
+{% endif %}
+{% endblock %}

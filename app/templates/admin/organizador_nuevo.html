@@ -1,0 +1,48 @@
+{% extends "admin/_base.html" %}
+{% block title %}Nuevo productor{% endblock %}
+{% block titulo_admin %}Nuevo productor{% endblock %}
+{% block acciones_admin %}<a href="{{ url_for('admin.organizadores') }}" class="btn btn-sm btn-outline-secondary">← Clientes</a>{% endblock %}
+{% block contenido_admin %}
+<div class="row g-4">
+  <div class="col-lg-7">
+    <form method="post" class="mc-panel" autocomplete="off">
+      <h2 class="h5 mb-3">Datos de la cuenta</h2>
+      <div class="mb-3">
+        <label class="form-label" for="nombre">Nombre o productora</label>
+        <input type="text" id="nombre" name="nombre" class="form-control" value="{{ nombre }}" required autofocus
+               placeholder="Ej: Jaya TV">
+      </div>
+      <div class="mb-3">
+        <label class="form-label" for="email">Email (con este entra)</label>
+        <input type="email" id="email" name="email" class="form-control" value="{{ email }}" required
+               autocomplete="off" placeholder="productor@email.com">
+      </div>
+      <div class="row g-3 mb-3">
+        <div class="col-sm-6">
+          <label class="form-label" for="password">Contraseña inicial</label>
+          <input type="password" id="password" name="password" class="form-control" required minlength="8"
+                 autocomplete="new-password">
+        </div>
+        <div class="col-sm-6">
+          <label class="form-label" for="password_confirm">Repetila</label>
+          <input type="password" id="password_confirm" name="password_confirm" class="form-control" required
+                 minlength="8" autocomplete="new-password">
+        </div>
+      </div>
+      <div class="form-text mb-3">Mínimo 8 caracteres. El productor la puede cambiar después desde su cuenta.</div>
+      <button type="submit" class="btn btn-pc px-4">Crear productor</button>
+    </form>
+  </div>
+  <div class="col-lg-5">
+    <div class="mc-panel">
+      <h2 class="h6 mb-2">¿Qué pasa después?</h2>
+      <ol class="small text-muted mb-0 ps-3">
+        <li class="mb-1">Le pasás al productor su email y contraseña.</li>
+        <li class="mb-1">Entra por <b>Iniciar sesión</b> y arma su evento.</li>
+        <li class="mb-1">Desde su panel conecta su cuenta de <b>Mercado Pago</b> para cobrar.</li>
+        <li>Vos lo ves en <b>Clientes</b> y podés mirar su panel con <b>Ver panel</b>.</li>
+      </ol>
+    </div>
+  </div>
+</div>
+{% endblock %}

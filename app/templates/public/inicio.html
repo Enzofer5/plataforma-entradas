@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+{% import "_iconos.html" as ui %}
+{% from "public/_tarjeta.html" import tarjeta_evento %}
+{% block title %}Tu acceso a las mejores fiestas{% endblock %}
+
+{% block pagina_completa %}
+{% set proximo = destacados[0] if destacados else None %}
+
+<!-- ============ HERO ============ -->
+<section class="pc-hero">
+  <canvas class="pc-matrix" id="matrix" aria-hidden="true"></canvas>
+  <div class="container">
+    {{ mensajes_flash() }}
+    <div class="row align-items-center g-4">
+      <div class="col-lg-7">
+        <span class="pc-terminal-chip"><span class="prompt">passcode@matrixcode:~$</span> <span id="tipeo"></span><span class="cursor"></span></span>
+        <h1>Tu acceso<br>a las<br>mejores<br><span class="pc-neon">fiestas.</span></h1>
+        <p class="lead mb-4">Comprás online, te llega tu entrada con QR y entrás en segundos. Sin papel, sin filas eternas.</p>
+        <div class="d-flex flex-wrap gap-2 mb-4">
+          <a href="#eventos" class="btn btn-pc btn-lg px-4">Ver eventos →</a>
+          <a href="{{ url_for('public.organizadores') }}" class="btn btn-pc-borde btn-lg px-4">Vender mis entradas</a>
+        </div>
+        <div class="pc-checks">
+          <span>QR único por entrada</span>
+          <span>Pago con Mercado Pago</span>
+          <span>Entrás desde el celular</span>
+        </div>
+      </div>
+      <div class="col-lg-5">
+        {% if proximo %}
+          {% set f = proximo.fecha|fecha_larga %}
+          <a class="pc-ticket" href="{{ url_for('public.evento_detalle', slug=proximo.slug) }}" aria-label="Ver {{ proximo.nombre }}">
+        {% else %}
+          <div class="pc-ticket">
+        {% endif %}
+            <div class="pc-ticket-arriba">
+              <div class="d-flex justify-content-between align-items-center">
+                <span class="pc-ticket-marca">{{ ui.invader("pc-inv-mini") }} PASSCODE</span>
+                <span class="pc-ticket-admit">ADMIT ONE</span>
+              </div>
+              <h3>{{ proximo.nombre if proximo else "Tu próxima fiesta" }}</h3>
+              <div class="pc-ticket-datos">
+                <div><small>Fecha</small>{% if proximo and f %}{{ f.dia }} {{ f.mes }}{% else %}PRONTO{% endif %}</div>
+                <div><small>Hora</small>{{ proximo.hora if proximo and proximo.hora else "--:--" }}</div>
+                <div class="text-end"><small>Lugar</small>{{ (proximo.lugar if proximo else "Tu ciudad")|truncate(18, True, "…") }}</div>
+              </div>
+            </div>
+            <div class="pc-ticket-corte"></div>
+            <div class="pc-ticket-abajo">
+              <div class="pc-qr">{{ ui.qr_falso() }}</div>
+              <div>
+                <div class="pc-acceso">ACCESO<br>CONCEDIDO</div>
+                <div class="pc-mono text-muted mt-1" style="font-size: .7rem;">vista de ejemplo</div>
+              </div>
+            </div>
+        {% if proximo %}</a>{% else %}</div>{% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+
+{{ ui.bandas() }}
+
+<!-- ============ EVENTOS ============ -->
+<section class="pc-seccion" id="eventos">
+  <div class="container">
+    <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
+      <div>
+        <div class="pc-kicker mb-2">próximos eventos</div>
+        <h2 class="pc-seccion-titulo mb-0">Elegí tu<br><span class="pc-neon">próxima noche.</span></h2>
+      </div>
+      {% if eventos %}
+        <form class="pc-buscador" role="search" onsubmit="return false;">
+          <span class="prompt">&gt;</span>
+          <input type="search" id="buscar-evento" placeholder="buscar evento, lugar o productora" aria-label="Buscar evento">
+          <button class="btn btn-pc btn-sm" type="submit">Buscar</button>
+        </form>
+      {% endif %}
+    </div>
+
+    {% if not eventos %}
+      <div class="pc-card text-center py-5">
+        <div class="pc-acceso mb-2">SIN EVENTOS</div>
+        <p class="text-muted mb-0">Todavía no hay eventos publicados. Volvé pronto: se vienen cosas buenas.</p>
+      </div>
+    {% else %}
+      <div class="row g-4" id="lista-eventos">
+        {% for evento in eventos %}
+          <div class="col-lg-6">{{ tarjeta_evento(evento) }}</div>
+        {% endfor %}
+      </div>
+      <p class="text-muted pc-mono small mt-4 d-none" id="sin-resultados">&gt; no encontramos eventos con esa búsqueda.</p>
+    {% endif %}
+  </div>
+</section>
+
+<!-- ============ CÓMO FUNCIONA ============ -->
+<section class="pc-seccion" id="como-funciona">
+  <div class="container">
+    <div class="pc-kicker mb-2">cómo funciona</div>
+    <h2 class="pc-seccion-titulo mb-4">Cuatro pasos.<br><span class="pc-neon">Cero vueltas.</span></h2>
+    <div class="row g-3">
+      {% for num, titulo, texto in [
+        ("01", "Elegís", "Buscás tu evento y el tipo de entrada que querés."),
+        ("02", "Pagás", "Con Mercado Pago: tarjeta, débito, dinero en cuenta o efectivo."),
+        ("03", "Recibís", "Tu entrada con QR aparece al instante y queda en tu link."),
+        ("04", "Entrás", "Mostrás el QR en la puerta desde el celular. Listo."),
+      ] %}
+        <div class="col-6 col-lg-3">
+          <div class="pc-paso">
+            <div class="numero">{{ num }}</div>
+            <h5>{{ titulo }}</h5>
+            <p>{{ texto }}</p>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- ============ PARA PRODUCTORES ============ -->
+<section class="pc-seccion">
+  <div class="container">
+    <div class="row g-5 align-items-center">
+      <div class="col-lg-6">
+        <div class="pc-kicker mb-2">para productores</div>
+        <h2 class="pc-seccion-titulo mb-3">Vendé tus<br>entradas<br><span class="pc-neon">con Passcode.</span></h2>
+        <p class="text-muted">Sin costos fijos para el organizador: el comprador paga el cargo por servicio y vos cobrás el precio de tus entradas.</p>
+        <ul class="pc-lista-flecha mb-4">
+          <li>Tipos de entrada con precio y cupo propios</li>
+          <li>Control de acceso por QR desde el celular</li>
+          <li>Estadísticas y ventas en tiempo real</li>
+          <li>Cupones de descuento para tus promos</li>
+          <li>Reportes exportables a Excel</li>
+        </ul>
+        <a href="{{ url_for('public.organizadores') }}" class="btn btn-pc px-4">Empezar a vender →</a>
+      </div>
+      <div class="col-lg-6">
+        <div class="pc-terminal">
+          <div class="pc-terminal-barra"><i></i><i></i><i></i><span class="ms-2">panel · vista de ejemplo</span></div>
+<div class="pc-terminal-cuerpo">$ passcode ventas --hoy
+entradas vendidas ...... <span class="v">128</span>
+ocupación .............. <span class="v">64%</span>
+cupones usados ......... <span class="v">17</span>
+
+$ passcode puerta --validar
+<span class="v">[OK]</span> GENERAL  · ingresó
+<span class="v">[OK]</span> VIP      · ingresó
+<span class="x">[X]</span>  ya usada · rechazada
+<span class="v">[OK]</span> GENERAL  · ingresó<span class="pc-terminal-chip p-0 border-0 bg-transparent"><span class="cursor"></span></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PREGUNTAS FRECUENTES ============ -->
+<section class="pc-seccion" id="ayuda">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-lg-5">
+        <div class="pc-kicker mb-2">ayuda</div>
+        <h2 class="pc-seccion-titulo">Preguntas<br><span class="pc-neon">frecuentes.</span></h2>
+      </div>
+      <div class="col-lg-7 pc-faq">
+        <details>
+          <summary>¿Cómo recibo mi entrada?</summary>
+          <p>Apenas se acredita el pago, ves tus entradas con su código QR en pantalla. Cada entrada tiene su propio link: guardalo o sacale captura al QR.</p>
+        </details>
+        <details>
+          <summary>¿Tengo que imprimirla?</summary>
+          <p>No. Mostrás el QR desde el celular en la puerta y lo escanean en segundos.</p>
+        </details>
+        <details>
+          <summary>¿Qué es el cargo por servicio?</summary>
+          <p>Es un porcentaje que se suma al precio de la entrada y cubre el servicio de la plataforma: la venta online, el cobro, la emisión de entradas con QR y el control de acceso. Siempre lo ves desglosado antes de pagar.</p>
+        </details>
+        <details>
+          <summary>¿Cómo puedo pagar?</summary>
+          <p>Con Mercado Pago: tarjeta de crédito (con cuotas), débito, prepaga, dinero en cuenta o efectivo en Rapipago y Pago Fácil.</p>
+        </details>
+        <details>
+          <summary>¿Puedo compartir mi QR?</summary>
+          <p>Cada QR vale para un solo ingreso. Si lo compartís y alguien entra antes con ese código, el tuyo va a figurar como usado. Cuidalo como si fuera la entrada en papel.</p>
+        </details>
+        <details>
+          <summary>Quiero vender entradas, ¿cómo empiezo?</summary>
+          <p>Creá tu cuenta de productor gratis, armá tu evento con el flyer y los tipos de entrada, publicalo y compartí el link. <a href="{{ url_for('public.organizadores') }}">Ver más</a>.</p>
+        </details>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block antes_del_footer %}
+<section class="pc-cta">
+  <div class="container d-flex flex-wrap justify-content-between align-items-center gap-3">
+    <h2>{{ ui.invader() }} ¿Organizás una fiesta?</h2>
+    <a href="{{ url_for('public.organizadores') }}" class="btn">Hablemos →</a>
+  </div>
+</section>
+{{ ui.bandas() }}
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/passcode.js') }}"></script>
+<script>
+  (function () {
+    const buscador = document.getElementById("buscar-evento");
+    if (!buscador) return;
+    const tarjetas = document.querySelectorAll("#lista-eventos [data-busqueda]");
+    const vacio = document.getElementById("sin-resultados");
+    buscador.addEventListener("input", function () {
+      const texto = buscador.value.trim().toLowerCase();
+      let visibles = 0;
+      tarjetas.forEach(function (t) {
+        const coincide = t.dataset.busqueda.includes(texto);
+        t.parentElement.classList.toggle("d-none", !coincide);
+        if (coincide) visibles++;
+      });
+      vacio.classList.toggle("d-none", visibles > 0);
+    });
+  })();
+</script>
+{% endblock %}

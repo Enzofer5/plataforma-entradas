@@ -1,0 +1,77 @@
+{# Íconos y piezas gráficas reutilizables (SVG en línea, toman el color del texto). #}
+
+{% macro invader(clase="") -%}
+<svg class="{{ clase }}" viewBox="0 0 11 8" fill="currentColor" aria-hidden="true" shape-rendering="crispEdges">
+  <rect x="2" y="0" width="1" height="1"/><rect x="8" y="0" width="1" height="1"/>
+  <rect x="3" y="1" width="1" height="1"/><rect x="7" y="1" width="1" height="1"/>
+  <rect x="2" y="2" width="7" height="1"/>
+  <rect x="1" y="3" width="2" height="1"/><rect x="4" y="3" width="3" height="1"/><rect x="8" y="3" width="2" height="1"/>
+  <rect x="0" y="4" width="11" height="1"/>
+  <rect x="0" y="5" width="1" height="1"/><rect x="2" y="5" width="7" height="1"/><rect x="10" y="5" width="1" height="1"/>
+  <rect x="0" y="6" width="1" height="1"/><rect x="2" y="6" width="1" height="1"/><rect x="8" y="6" width="1" height="1"/><rect x="10" y="6" width="1" height="1"/>
+  <rect x="3" y="7" width="2" height="1"/><rect x="6" y="7" width="2" height="1"/>
+</svg>
+{%- endmacro %}
+
+{% macro logo(cursor=True) -%}
+<span class="pc-logo">{{ invader() }}<span>pass<span class="code">code</span>{% if cursor %}<span class="cursor">_</span>{% endif %}</span></span>
+{%- endmacro %}
+
+{# QR decorativo (dibujo fijo, no es un QR real). #}
+{% macro qr_falso() -%}
+<svg viewBox="0 0 21 21" shape-rendering="crispEdges" aria-hidden="true">
+  <rect width="21" height="21" fill="#fff"/>
+  <g fill="#050806">
+    <rect x="0" y="0" width="7" height="1"/><rect x="0" y="6" width="7" height="1"/><rect x="0" y="0" width="1" height="7"/><rect x="6" y="0" width="1" height="7"/><rect x="2" y="2" width="3" height="3"/>
+    <rect x="14" y="0" width="7" height="1"/><rect x="14" y="6" width="7" height="1"/><rect x="14" y="0" width="1" height="7"/><rect x="20" y="0" width="1" height="7"/><rect x="16" y="2" width="3" height="3"/>
+    <rect x="0" y="14" width="7" height="1"/><rect x="0" y="20" width="7" height="1"/><rect x="0" y="14" width="1" height="7"/><rect x="6" y="14" width="1" height="7"/><rect x="2" y="16" width="3" height="3"/>
+    <rect x="8" y="1" width="2" height="1"/><rect x="11" y="0" width="1" height="3"/><rect x="9" y="3" width="3" height="1"/><rect x="8" y="5" width="1" height="2"/><rect x="10" y="5" width="2" height="1"/>
+    <rect x="0" y="8" width="2" height="1"/><rect x="3" y="8" width="3" height="1"/><rect x="1" y="10" width="3" height="1"/><rect x="5" y="9" width="1" height="3"/><rect x="0" y="12" width="2" height="1"/>
+    <rect x="8" y="8" width="5" height="1"/><rect x="8" y="10" width="1" height="3"/><rect x="10" y="10" width="2" height="2"/><rect x="13" y="9" width="1" height="3"/><rect x="9" y="13" width="3" height="1"/>
+    <rect x="15" y="8" width="2" height="1"/><rect x="18" y="8" width="3" height="1"/><rect x="15" y="10" width="1" height="2"/><rect x="17" y="11" width="3" height="1"/><rect x="19" y="13" width="2" height="1"/>
+    <rect x="8" y="15" width="1" height="3"/><rect x="10" y="16" width="3" height="1"/><rect x="11" y="18" width="2" height="3"/><rect x="8" y="20" width="2" height="1"/>
+    <rect x="14" y="15" width="3" height="1"/><rect x="18" y="15" width="1" height="3"/><rect x="15" y="17" width="2" height="2"/><rect x="14" y="19" width="1" height="2"/><rect x="17" y="20" width="4" height="1"/><rect x="20" y="17" width="1" height="2"/>
+  </g>
+</svg>
+{%- endmacro %}
+
+{# Íconos de línea para el menú del panel y los beneficios. #}
+{% macro icono(nombre) -%}
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+{%- if nombre == "dashboard" -%}<path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/>
+{%- elif nombre == "eventos" -%}<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>
+{%- elif nombre == "ventas" -%}<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>
+{%- elif nombre == "compradores" -%}<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/>
+{%- elif nombre == "entradas" -%}<path d="M3 8a2 2 0 0 0 0 4v4a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4a2 2 0 0 0 0-4V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2z"/><path d="M14 4v14" stroke-dasharray="2 2"/>
+{%- elif nombre == "ingreso" -%}<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3M21 14v.01M14 21h7v-4"/>
+{%- elif nombre == "cupones" -%}<path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.5"/>
+{%- elif nombre == "mercadopago" -%}<path d="M12 2l9 5-9 5-9-5 9-5z"/><path d="M3 12l9 5 9-5M3 17l9 5 9-5"/>
+{%- elif nombre == "cuenta" -%}<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>
+{%- elif nombre == "estrella" -%}<path d="M12 2l3 6.5 7 .8-5.2 4.8 1.4 7L12 17.6 5.8 21l1.4-7L2 9.3l7-.8L12 2z"/>
+{%- elif nombre == "comisiones" -%}<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/>
+{%- elif nombre == "clientes" -%}<path d="M3 21V9l9-6 9 6v12"/><path d="M9 21v-6h6v6"/>
+{%- elif nombre == "cobros" -%}<path d="M3 10h18M5 10v8M9.5 10v8M14.5 10v8M19 10v8M2 21h20M12 2l10 5H2l10-5z"/>
+{%- elif nombre == "config" -%}<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>
+{%- elif nombre == "qr" -%}<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h7v7h-7z"/>
+{%- elif nombre == "tiempo" -%}<path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-5"/>
+{%- elif nombre == "capas" -%}<path d="M12 2l9 5-9 5-9-5 9-5z"/><path d="M3 12l9 5 9-5"/>
+{%- elif nombre == "mail" -%}<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>
+{%- elif nombre == "descarga" -%}<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+{%- elif nombre == "salir" -%}<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>
+{%- endif -%}
+</svg>
+{%- endmacro %}
+
+{# Bandas verdes cruzadas que se desplazan (marquesina). #}
+{% macro bandas() -%}
+{% set palabras = ["ANIVERSARIOS", "FESTIVALES", "RECITALES", "PASSCODE", "FIESTAS", "ENTRADAS", "ACCESO QR", "BOLICHES"] %}
+<div class="pc-bandas" aria-hidden="true">
+  {% for clase in ["uno", "dos"] %}
+    <div class="pc-banda {{ clase }}">
+      <div class="pc-banda-pista">
+        {% for _ in range(2) %}{% for p in (palabras if clase == "uno" else palabras|reverse) %}<span>{{ p }}</span>{{ invader("inv") }}{% endfor %}{% endfor %}
+      </div>
+    </div>
+  {% endfor %}
+</div>
+{%- endmacro %}

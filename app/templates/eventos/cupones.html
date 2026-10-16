@@ -1,0 +1,123 @@
+{% extends "eventos/_panel.html" %}
+{% from "eventos/_evento_nav.html" import cabecera_evento %}
+{% block title %}Cupones — {{ evento.nombre }}{% endblock %}
+{% block panel %}
+{{ cabecera_evento(evento) }}
+
+<div class="row g-4">
+  <div class="col-lg-4">
+    <form method="post" class="mc-panel">
+      <h5 class="mb-3">Nuevo cupón</h5>
+      <div class="mb-3">
+        <label class="form-label">Código</label>
+        <input type="text" name="codigo" class="form-control text-uppercase" placeholder="Ej: PROMO20"
+               required minlength="3" maxlength="30" pattern="[A-Za-z0-9_\-]+" autocomplete="off">
+        <div class="form-text">Letras, números, - o _ (sin espacios). Es lo que escribe el comprador.</div>
+      </div>
+      <div class="row g-2 mb-3">
+        <div class="col-7">
+          <label class="form-label">Tipo</label>
+          <select name="tipo" class="form-select">
+            <option value="porcentaje">Porcentaje (%)</option>
+            <option value="monto">Monto fijo ($)</option>
+          </select>
+        </div>
+        <div class="col-5">
+          <label class="form-label">Descuento</label>
+          <input type="number" name="valor" class="form-control" min="0.01" step="0.01" required placeholder="20">
+        </div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Límite de usos <span class="text-muted small">(opcional)</span></label>
+        <input type="number" name="usos_maximos" class="form-control" min="1" placeholder="Sin límite">
+        <div class="form-text">Cada compra que usa el cupón cuenta como un uso.</div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Vence el <span class="text-muted small">(opcional)</span></label>
+        <input type="date" name="vence_en" class="form-control" min="{{ hoy }}">
+        <div class="form-text">Se puede usar hasta ese día inclusive.</div>
+      </div>
+      <button type="submit" class="btn btn-primary w-100">Crear cupón</button>
+    </form>
+  </div>
+
+  <div class="col-lg-8">
+    {% if not cupones %}
+      <div class="mc-panel text-center py-5">
+        <div style="font-size: 3rem;">🏷️</div>
+        <h5 class="mt-2">Todavía no hay cupones</h5>
+        <p class="text-muted mb-0">
+          Creá un código para promociones, preventas, invitados o influencers.
+          Ej: <span class="mc-cupon-codigo">PREVENTA</span> con 15% off y 100 usos.
+        </p>
+      </div>
+    {% else %}
+      <div class="mc-panel p-0">
+        <div class="table-responsive">
+          <table class="table align-middle mb-0">
+            <thead>
+              <tr>
+                <th class="ps-3">Código</th>
+                <th>Descuento</th>
+                <th>Usos</th>
+                <th>Vence</th>
+                <th>Estado</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for cupon in cupones %}
+                {% set vencido = cupon.vence_en and cupon.vence_en < hoy %}
+                {% set agotado = cupon.usos_maximos is not none and cupon.usos >= cupon.usos_maximos %}
+                <tr>
+                  <td class="ps-3"><span class="mc-cupon-codigo">{{ cupon.codigo }}</span></td>
+                  <td>
+                    <strong>{{ describir_cupon(cupon) }}</strong>
+                    {% if cupon.descuento_total %}
+                      <div class="small text-muted">{{ cupon.descuento_total|pesos }} descontados</div>
+                    {% endif %}
+                  </td>
+                  <td>{{ cupon.usos }}{% if cupon.usos_maximos is not none %} / {{ cupon.usos_maximos }}{% endif %}</td>
+                  <td>{{ cupon.vence_en|fecha_es if cupon.vence_en else '—' }}</td>
+                  <td>
+                    {% if not cupon.activo %}
+                      <span class="badge bg-secondary">Pausado</span>
+                    {% elif vencido %}
+                      <span class="badge bg-danger">Vencido</span>
+                    {% elif agotado %}
+                      <span class="badge bg-warning text-dark">Agotado</span>
+                    {% else %}
+                      <span class="badge bg-success">Activo</span>
+                    {% endif %}
+                  </td>
+                  <td class="text-end pe-3">
+                    <div class="d-flex justify-content-end gap-1">
+                      <form method="post" action="{{ url_for('eventos.activar_cupon', evento_id=evento.id, cupon_id=cupon.id) }}">
+                        <button type="submit" class="btn btn-sm btn-outline-secondary">
+                          {{ 'Pausar' if cupon.activo else 'Activar' }}
+                        </button>
+                      </form>
+                      {% if cupon.usos == 0 %}
+                        <form method="post" action="{{ url_for('eventos.eliminar_cupon', evento_id=evento.id, cupon_id=cupon.id) }}"
+                              onsubmit="return confirm('¿Eliminar el cupón {{ cupon.codigo }}?');">
+                          <button type="submit" class="btn btn-sm btn-outline-danger">Eliminar</button>
+                        </form>
+                      {% endif %}
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% if evento.estado == "publicado" %}
+        <p class="text-muted small mt-3">
+          💡 Tip: podés compartir un link que ya trae el cupón cargado, por ejemplo:<br>
+          <code>{{ url_for('compras.comprar', slug=evento.slug, cupon=cupones[0].codigo, _external=True) }}</code>
+        </p>
+      {% endif %}
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

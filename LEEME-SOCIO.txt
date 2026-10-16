@@ -1,0 +1,60 @@
+PASSCODE — cómo probarlo en tu compu
+=====================================
+
+1) Instalá Python 3.11 o más nuevo: https://www.python.org/downloads/
+   (en el instalador tildá "Add python.exe to PATH").
+
+2) Descomprimí este .zip. Abrí la carpeta "passcode", hacé clic en la barra de
+   direcciones del Explorador, escribí  cmd  y Enter. En la ventana negra:
+
+     python -m venv venv
+     venv\Scripts\activate
+     pip install -r requirements.txt
+     python run.py
+
+3) Abrí http://localhost:5000 en el navegador.
+
+CUENTAS DE PRUEBA (contraseñas solo para esta copia)
+----------------------------------------------------
+Organizador — contraseña: prueba-qf6znl
+   - antonio: romeraantonio9@gmail.com  (Mercado Pago CONECTADO)
+
+Dueño de la plataforma (Panel MatrixCode) — contraseña: prueba-2xqxeizy
+   - enzo: enzo@gmail.com
+
+Las dos se usan desde "Iniciar sesión".
+
+¡ATENCIÓN! ESTA COPIA COBRA DE VERDAD
+-------------------------------------
+- Modo de cobro: cada organizador cobra en su cuenta.
+- La cuenta de Mercado Pago del organizador está CONECTADA: los pagos con tarjeta
+  son REALES y entran en su cuenta (y el recargo, en la cuenta del dueño de la app).
+  Para probar, usá montos chicos y devolvé la plata desde Mercado Pago.
+- No compartas este .zip ni lo subas a ningún lado: con esa conexión se puede cobrar
+  y devolver plata en la cuenta del organizador.
+- Las compras que hagas acá quedan en esta copia (no aparecen en la app original).
+- Los compradores viejos están reemplazados por "Comprador de prueba N".
+- No manda mails (no tiene correo configurado).
+
+USAR LA APP DESDE INTERNET (celular, otras personas) CON NGROK — opcional
+--------------------------------------------------------------------------
+Para probar solo en esta compu NO hace falta: alcanza con http://localhost:5000.
+
+1) Creá una cuenta gratis en https://ngrok.com
+2) Instalá ngrok: en la ventana negra escribí
+     winget install ngrok.ngrok
+   (cerrá y volvé a abrir la ventana negra después de instalarlo)
+3) Copiá tu "Authtoken" del panel de ngrok (Your Authtoken) y escribí:
+     ngrok config add-authtoken TU_AUTHTOKEN
+4) En el panel de ngrok, en "Domains", reclamá tu dominio gratis
+   (algo como  tu-nombre.ngrok-free.dev).
+5) Con la app corriendo (python run.py), abrí OTRA ventana negra y escribí:
+     ngrok http --url=https://TU-DOMINIO.ngrok-free.dev 5000
+6) Abrí el archivo .env con el Bloc de notas y cambiá:
+     BASE_URL=https://TU-DOMINIO.ngrok-free.dev
+   Guardá y volvé a correr  python run.py
+7) Entrá a la app desde https://TU-DOMINIO.ngrok-free.dev (si aparece un aviso de
+   ngrok, tocá "Visit Site").
+
+Con BASE_URL en https, la app apaga sola el modo de depuración (más seguro) y
+Mercado Pago puede avisar automáticamente los pagos en efectivo.

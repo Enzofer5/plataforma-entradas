@@ -1,0 +1,155 @@
+{% extends "eventos/_panel.html" %}
+{% import "_grafico.html" as graf %}
+{% block title %}Mi panel{% endblock %}
+{% block panel %}
+<div class="pc-panel-cabecera">
+  <div>
+    <div class="seccion">Organizador</div>
+    <h1>Hola, {{ g.organizador.nombre }} 👋</h1>
+  </div>
+  {{ graf.filtro_fechas(desde, hasta) }}
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-6 col-xl-3">
+    <div class="pc-kpi">
+      <div class="etiqueta">Vendido en el período</div>
+      <div class="valor">{{ totales.vendido|pesos }}</div>
+      <div class="detalle">neto de cupones</div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="pc-kpi">
+      <div class="etiqueta">Entradas vendidas</div>
+      <div class="valor">{{ totales.entradas }}</div>
+      <div class="detalle">{{ totales.compras }} compra{{ 's' if totales.compras != 1 }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="pc-kpi">
+      <div class="etiqueta">Ticket promedio</div>
+      <div class="valor">{{ (totales.vendido / totales.compras if totales.compras else 0)|pesos }}</div>
+      <div class="detalle">{{ totales.con_cupon }} con cupón</div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="pc-kpi">
+      <div class="etiqueta">Ingresaron</div>
+      <div class="valor">{{ ingresos.usadas }}</div>
+      <div class="detalle">entradas validadas en el período</div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="pc-kpi">
+      <div class="etiqueta">Eventos</div>
+      <div class="valor">{{ eventos.total }}</div>
+      <div class="detalle">{{ eventos.publicados }} publicado{{ 's' if eventos.publicados != 1 }} · <a href="{{ url_for('eventos.nuevo') }}">+ crear</a></div>
+    </div>
+  </div>
+  {% if modo_cobro == "centralizado" %}
+    <div class="col-6 col-xl-3">
+      <div class="pc-kpi">
+        <div class="etiqueta">Por cobrar</div>
+        <div class="valor">{{ (saldo.pendiente if saldo else 0)|pesos }}</div>
+        <div class="detalle">te lo transferimos · <a href="{{ url_for('auth.cuenta') }}">ver detalle</a></div>
+      </div>
+    </div>
+    <div class="col-6 col-xl-3">
+      <div class="pc-kpi">
+        <div class="etiqueta">Ya cobrado</div>
+        <div class="valor">{{ (saldo.transferido if saldo else 0)|pesos }}</div>
+        <div class="detalle">transferencias recibidas</div>
+      </div>
+    </div>
+    <div class="col-6 col-xl-3">
+      <div class="pc-kpi">
+        <div class="etiqueta">Datos de cobro</div>
+        <div class="valor" style="font-size: 1.05rem;">{{ '✓ Cargados' if g.organizador.datos_cobro else '⚠ Faltan' }}</div>
+        <div class="detalle"><a href="{{ url_for('auth.cuenta') }}">{{ 'Ver' if g.organizador.datos_cobro else 'Cargá tu alias o CBU' }}</a></div>
+      </div>
+    </div>
+  {% else %}
+    <div class="col-12 col-xl-9">
+      <div class="pc-kpi">
+        <div class="etiqueta">Mercado Pago</div>
+        <div class="valor" style="font-size: 1.05rem;">{{ '✓ Cuenta conectada: la plata te llega directo' if g.organizador.mp_access_token else '⚠ Conectá tu cuenta para vender entradas pagas' }}</div>
+        <div class="detalle"><a href="{{ url_for('auth.cuenta') }}">Ir a Cobros y cuenta</a></div>
+      </div>
+    </div>
+  {% endif %}
+</div>
+
+<div class="pc-card mb-3">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+    <h5 class="mb-0">Ventas por día</h5>
+    <span class="pc-mono small text-muted">{{ desde|fecha_es }} - {{ hasta|fecha_es }}</span>
+  </div>
+  {% if totales.compras %}
+    {{ graf.barras_por_dia("grafico-ventas", serie, "Vendido") }}
+  {% else %}
+    <p class="text-muted text-center py-5 mb-0 pc-mono">&gt; sin ventas en este período</p>
+  {% endif %}
+</div>
+
+<div class="pc-card mb-3">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="mb-0">Ventas por evento</h5>
+    <a href="{{ url_for('eventos.ventas', desde=desde, hasta=hasta) }}" class="btn btn-pc-borde btn-sm">Ver detalle</a>
+  </div>
+  {% if por_evento %}
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead><tr><th>Evento</th><th>Fecha</th><th>Estado</th><th class="text-end">Compras</th><th class="text-end">Entradas</th><th class="text-end">Vendido</th></tr></thead>
+        <tbody>
+          {% for e in por_evento %}
+            <tr>
+              <td><a href="{{ url_for('eventos.detalle', evento_id=e.id) }}">{{ e.nombre }}</a></td>
+              <td>{{ e.fecha|fecha_es }}</td>
+              <td>
+                {% if e.bloqueado %}<span class="badge bg-danger">Pausado</span>
+                {% elif e.estado == "publicado" %}<span class="badge bg-success">Publicado</span>
+                {% else %}<span class="badge bg-warning">Borrador</span>{% endif %}
+              </td>
+              <td class="text-end">{{ e.compras }}</td>
+              <td class="text-end">{{ e.entradas }}</td>
+              <td class="text-end fw-bold">{{ e.vendido|pesos }}</td>
+            </tr>
+          {% endfor %}
+          <tr class="pc-fila-total">
+            <td colspan="3">TOTAL</td>
+            <td class="text-end">{{ totales.compras }}</td>
+            <td class="text-end">{{ totales.entradas }}</td>
+            <td class="text-end">{{ totales.vendido|pesos }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="text-muted mb-0">Sin ventas en este período.</p>
+  {% endif %}
+</div>
+
+{% if ultimas %}
+<div class="pc-card">
+  <h5 class="mb-3">Últimas compras</h5>
+  <div class="table-responsive">
+    <table class="table table-sm align-middle">
+      <thead><tr><th>Fecha</th><th>Comprador</th><th>Evento</th><th class="text-end">Entradas</th><th class="text-end">Neto</th></tr></thead>
+      <tbody>
+        {% for o in ultimas %}
+          <tr>
+            <td class="small pc-mono">{{ o.fecha_local[:10]|fecha_es }} {{ o.fecha_local[11:16] }}</td>
+            <td>{{ o.comprador_nombre }}<div class="small text-muted">{{ o.comprador_email }}</div></td>
+            <td class="small">{{ o.evento }}</td>
+            <td class="text-end">{{ o.cantidad }}</td>
+            <td class="text-end">{{ o.neto|pesos }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}{{ graf.scripts() }}{% endblock %}

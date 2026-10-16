@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Mis entradas{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-4">
+  <div>
+    <div class="pc-mono small text-uppercase" style="color: var(--pc-verde)">Hola, {{ g.comprador.nombre.split()[0] }}</div>
+    <h1 class="h2 mb-0" style="font-family: var(--pc-titulo); font-weight: 900">Mis entradas</h1>
+  </div>
+  <a href="{{ url_for('public.inicio') }}#eventos" class="btn btn-pc btn-sm px-3">Ver eventos</a>
+</div>
+
+{% if not ordenes %}
+  <div class="pc-card text-center py-5">
+    <p class="mb-1">Todavía no compraste entradas con esta cuenta.</p>
+    <p class="text-muted small mb-3">Cuando compres, tus entradas con QR van a aparecer acá.</p>
+    <a href="{{ url_for('public.inicio') }}#eventos" class="btn btn-pc px-4">Buscar eventos</a>
+  </div>
+{% else %}
+  {% for o in ordenes %}
+    <div class="pc-card mb-3">
+      <div class="d-flex gap-3 align-items-center flex-wrap">
+        {% if o.evento_imagen %}<img src="{{ o.evento_imagen }}" alt="" style="width:64px;height:64px;object-fit:cover;border-radius:10px">{% endif %}
+        <div class="flex-grow-1">
+          <div class="fw-bold fs-5">{{ o.evento_nombre }}</div>
+          <div class="text-muted small">{{ o.evento_fecha|fecha_es }}{% if o.evento_hora %} · {{ o.evento_hora }} hs{% endif %}{% if o.evento_lugar %} · {{ o.evento_lugar }}{% endif %}</div>
+        </div>
+        <div class="text-end">
+          {% if o.estado == 'pagada' %}<span class="badge bg-success">Pagada</span>
+          {% else %}<span class="badge bg-warning text-dark">Pago pendiente</span>{% endif %}
+          <div class="pc-mono small mt-1">{{ o.total|pesos }}</div>
+        </div>
+      </div>
+      {% if o.estado == 'pagada' %}
+        <div class="row g-2 mt-2">
+          {% for e in entradas[o.id] %}
+            <div class="col-sm-6 col-lg-4">
+              <a class="d-flex justify-content-between align-items-center p-2 rounded text-decoration-none"
+                 style="border:1px solid var(--pc-borde); background: var(--pc-bg-2)"
+                 href="{{ url_for('entradas.ver_entrada', codigo=e.codigo_unico) }}">
+                <span><b style="text-transform:capitalize">{{ e.tipo_nombre }}</b><br>
+                  <small class="text-muted pc-mono">{{ e.codigo_unico[:8] }}</small></span>
+                {% if e.estado == 'usada' %}<span class="badge bg-secondary">Usada</span>
+                {% else %}<span class="small" style="color: var(--pc-verde)">Ver QR →</span>{% endif %}
+              </a>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="mt-2"><a href="{{ url_for('compras.pagar', codigo=o.codigo) }}" class="btn btn-sm btn-outline-success">Terminar el pago</a></div>
+      {% endif %}
+    </div>
+  {% endfor %}
+{% endif %}
+{% endblock %}

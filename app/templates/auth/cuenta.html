@@ -1,0 +1,172 @@
+{% extends "eventos/_panel.html" %}
+{% block title %}Mi cuenta{% endblock %}
+{% block panel %}
+<div class="row justify-content-center">
+  <div class="col-lg-7">
+    <h1 class="h3 mb-4">Mi cuenta</h1>
+
+    {% if modo_cobro == "centralizado" %}
+      <!-- ============ Cobro centralizado: la plataforma cobra y transfiere ============ -->
+      <div class="row g-3 mb-3">
+        <div class="col-6 col-md-3">
+          <div class="mc-stat">
+            <div class="etiqueta">Vendiste</div>
+            <div class="valor">{{ (saldo.vendido if saldo else 0)|pesos }}</div>
+            <div class="detalle">neto de cupones</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="mc-stat">
+            <div class="etiqueta">Costos de cobro</div>
+            <div class="valor">−{{ ((saldo.comision + saldo.impuestos) if saldo else 0)|pesos }}</div>
+            <div class="detalle">Mercado Pago + impuestos</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="mc-stat">
+            <div class="etiqueta">Ya te transferimos</div>
+            <div class="valor">{{ (saldo.transferido if saldo else 0)|pesos }}</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="mc-stat">
+            <div class="etiqueta">Pendiente</div>
+            <div class="valor">{{ (saldo.pendiente if saldo else 0)|pesos }}</div>
+            <div class="detalle">te lo transferimos nosotros</div>
+          </div>
+        </div>
+      </div>
+
+      <details class="mc-panel mb-4">
+        <summary class="fw-semibold">¿Cómo se calcula lo que te transferimos?</summary>
+        <div class="small mt-2">
+          <p class="mb-2">
+            En cada compra, el comprador paga el precio de tus entradas <strong>más un cargo por
+            servicio</strong>. Ese cargo es lo que cobra la plataforma por vender, cobrar, emitir las
+            entradas con QR y controlar el ingreso.
+          </p>
+          <p class="mb-2">
+            Al cobrar, Mercado Pago descuenta sus <strong>costos de cobro</strong>, que son costos de tu
+            venta (igual que si cobraras con tu propio posnet o tu propio Mercado Pago):
+          </p>
+          <ul class="mb-2">
+            <li><strong>Comisión de Mercado Pago</strong> por procesar el pago con tarjeta.</li>
+            <li><strong>Retenciones de impuestos</strong> que Mercado Pago está obligado a hacer y
+              entregar al Estado (por ejemplo, Ingresos Brutos de la provincia). No se las queda
+              Mercado Pago.</li>
+          </ul>
+          <p class="mb-0">
+            <strong>Te transferimos:</strong> el precio de tus entradas (menos los cupones que hayas
+            dado) − los costos de cobro de cada venta. Abajo ves el detalle venta por venta.
+          </p>
+        </div>
+      </details>
+
+      {% if ventas %}
+        <div class="mc-panel mb-4">
+          <h5 class="mb-3">Detalle de tus ventas</h5>
+          <div class="table-responsive">
+            <table class="table table-sm align-middle mb-0">
+              <thead>
+                <tr><th>Fecha</th><th>Evento</th><th class="text-end">Pagó el comprador</th><th class="text-end">Cargo por servicio</th><th class="text-end">Tus entradas</th><th class="text-end">Comisión MP</th><th class="text-end">Impuestos</th><th class="text-end">Para vos</th></tr>
+              </thead>
+              <tbody>
+                {% for v in ventas %}
+                  <tr>
+                    <td class="small">{{ v.fecha_local[:10]|fecha_es }}</td>
+                    <td class="small">{{ v.evento_nombre }}</td>
+                    <td class="text-end">{{ v.total|pesos }}</td>
+                    <td class="text-end text-muted">{{ v.recargo|pesos }}</td>
+                    <td class="text-end">{{ v.venta|pesos }}</td>
+                    <td class="text-end text-danger">−{{ v.comision|pesos }}</td>
+                    <td class="text-end text-danger">−{{ v.impuestos|pesos }}</td>
+                    <td class="text-end fw-semibold">{{ v.para_vos|pesos }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      {% endif %}
+
+      <div class="mc-panel mb-4">
+        <h5 class="mb-1">¿Dónde te transferimos?</h5>
+        <p class="text-muted small">
+          Los pagos de tus entradas los cobra la plataforma y te transferimos lo vendido
+          (el precio de tus entradas, menos los cupones que hayas dado). Dejanos tu alias o
+          CBU/CVU y el titular de la cuenta.
+        </p>
+        <form method="post" action="{{ url_for('auth.guardar_datos_cobro') }}">
+          <textarea name="datos_cobro" class="form-control mb-2" rows="2" maxlength="300"
+                    placeholder="Ej: alias mi.productora.mp — Titular: Juan Pérez — CUIT 20-12345678-9">{{ g.organizador.datos_cobro or '' }}</textarea>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+          {% if not g.organizador.datos_cobro %}
+            <span class="text-danger small ms-2">⚠️ Todavía no cargaste a dónde transferirte.</span>
+          {% endif %}
+        </form>
+      </div>
+
+      {% if transferencias %}
+        <div class="mc-panel mb-4">
+          <h5 class="mb-3">Transferencias recibidas</h5>
+          <table class="table table-sm mb-0">
+            <tbody>
+              {% for t in transferencias %}
+                <tr>
+                  <td class="small">{{ t.fecha_local[:10]|fecha_es }}</td>
+                  <td class="small text-muted">{{ t.nota or '' }}</td>
+                  <td class="text-end fw-semibold">{{ t.monto|pesos }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% endif %}
+
+    {% else %}
+      <!-- ============ Cada organizador cobra en su Mercado Pago ============ -->
+      <div class="card mb-4">
+        <div class="card-body">
+          <h5 class="card-title">Mercado Pago</h5>
+          <p class="text-muted small">
+            Conectá tu cuenta de Mercado Pago para que la plata de tus entradas te
+            llegue directo a vos. La plataforma se queda automáticamente con el cargo
+            por servicio; el resto es todo tuyo.
+          </p>
+
+          {% if g.organizador.mp_access_token %}
+            <div class="alert alert-success mb-3">
+              ✅ Cuenta de Mercado Pago conectada.
+            </div>
+            {% if not g.organizador.mp_public_key %}
+              <div class="alert alert-warning small mb-3">
+                Volvé a conectar tu cuenta una vez para activar el <strong>formulario de pago
+                dentro de la página</strong> (tarjetas, dinero en cuenta y efectivo sin salir
+                del sitio). Mientras tanto, tus compradores pagan en la página de Mercado Pago.
+                <div class="mt-2">
+                  <a href="{{ url_for('auth.mp_conectar') }}" class="btn btn-sm btn-primary">Volver a conectar</a>
+                </div>
+              </div>
+            {% endif %}
+            <form method="post" action="{{ url_for('auth.mp_desconectar') }}">
+              <button type="submit" class="btn btn-outline-secondary">
+                Desconectar
+              </button>
+            </form>
+          {% else %}
+            <div class="alert alert-warning mb-3">
+              Todavía no conectaste tu cuenta. No vas a poder publicar eventos con
+              entradas pagas hasta que lo hagas.
+            </div>
+            <a href="{{ url_for('auth.mp_conectar') }}" class="btn btn-primary">
+              Conectar con Mercado Pago
+            </a>
+          {% endif %}
+        </div>
+      </div>
+    {% endif %}
+
+    <a href="{{ url_for('eventos.listado') }}" class="btn btn-link">&larr; Volver a mis eventos</a>
+  </div>
+</div>
+{% endblock %}

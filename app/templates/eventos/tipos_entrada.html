@@ -1,0 +1,50 @@
+{% extends "eventos/_panel.html" %}
+{% from "eventos/_evento_nav.html" import cabecera_evento %}
+{% block title %}Tipos de entrada — {{ evento.nombre }}{% endblock %}
+{% block panel %}
+{{ cabecera_evento(evento) }}
+
+<div class="row">
+  <div class="col-md-5">
+    <form method="post" class="pc-card mb-4">
+      <div class="mb-3">
+        <label class="form-label">Nombre</label>
+        <input type="text" name="nombre" class="form-control" placeholder="Ej: General, VIP" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Precio ($)</label>
+        <input type="number" name="precio" class="form-control" min="0" step="0.01" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Stock (cantidad disponible)</label>
+        <input type="number" name="stock" class="form-control" min="1" required>
+      </div>
+      <button type="submit" class="btn btn-primary w-100">Agregar</button>
+    </form>
+  </div>
+  <div class="col-md-7">
+    {% if not tipos %}
+      <p class="text-muted">Todavía no agregaste tipos de entrada.</p>
+    {% else %}
+      <table class="table">
+        <thead><tr><th>Nombre</th><th>Precio</th><th>Stock</th><th>Vendidas</th><th></th></tr></thead>
+        <tbody>
+          {% for tipo in tipos %}
+          <tr>
+            <td>{{ tipo.nombre }}</td>
+            <td>${{ "%.2f"|format(tipo.precio) }}</td>
+            <td>{{ tipo.stock_total }}</td>
+            <td>{{ tipo.stock_vendido }}</td>
+            <td>
+              <form method="post" action="{{ url_for('eventos.eliminar_tipo_entrada', evento_id=evento.id, tipo_id=tipo.id) }}">
+                <button type="submit" class="btn btn-sm btn-outline-danger">Eliminar</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

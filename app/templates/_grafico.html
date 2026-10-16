@@ -1,0 +1,96 @@
+{# Gráfico de barras por día (una sola serie), estilo neón.
+   serie: lista de {"dia": "AAAA-MM-DD", "valor": n}. en_pesos: formatea como $. #}
+{% macro barras_por_dia(id, serie, etiqueta, en_pesos=True, alto=260) %}
+<div style="position: relative; height: {{ alto }}px;">
+  <canvas id="{{ id }}" role="img" aria-label="Gráfico de barras: {{ etiqueta }} por día. El detalle está en la tabla."></canvas>
+</div>
+<script>
+  window.__graficos = window.__graficos || [];
+  window.__graficos.push({
+    id: {{ id|tojson }},
+    dias: {{ serie | map(attribute='dia') | list | tojson }},
+    valores: {{ serie | map(attribute='valor') | list | tojson }},
+    etiqueta: {{ etiqueta|tojson }},
+    pesos: {{ en_pesos|tojson }},
+  });
+</script>
+{% endmacro %}
+
+{% macro scripts() %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+  (function () {
+    const pesos = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
+    // Resplandor verde detrás de las barras, como en la referencia.
+    const brillo = {
+      id: "brillo",
+      beforeDatasetsDraw(chart) { chart.ctx.save(); chart.ctx.shadowColor = "rgba(43,255,136,.65)"; chart.ctx.shadowBlur = 14; },
+      afterDatasetsDraw(chart) { chart.ctx.restore(); },
+    };
+    (window.__graficos || []).forEach(function (g) {
+      const el = document.getElementById(g.id);
+      if (!el) return;
+      const formato = function (v) { return g.pesos ? pesos.format(v) : v; };
+      const muchos = g.dias.length > 45;
+      new Chart(el, {
+        type: "bar",
+        data: {
+          labels: g.dias.map(function (d) { const p = d.split("-"); return p[2] + "/" + p[1]; }),
+          datasets: [{
+            label: g.etiqueta,
+            data: g.valores,
+            backgroundColor: "#13ad5b",
+            hoverBackgroundColor: "#2bff88",
+            borderRadius: { topLeft: 4, topRight: 4 },
+            borderSkipped: "bottom",
+            maxBarThickness: 14,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: "#050806",
+              borderColor: "rgba(43,255,136,.45)",
+              borderWidth: 1,
+              padding: 10,
+              displayColors: false,
+              titleFont: { family: "JetBrains Mono" },
+              bodyFont: { family: "Manrope", weight: "700" },
+              callbacks: {
+                title: function (items) { return g.dias[items[0].dataIndex].split("-").reverse().join("/"); },
+                label: function (item) { return g.etiqueta + ": " + formato(item.parsed.y); },
+              },
+            },
+          },
+          scales: {
+            x: {
+              grid: { display: false },
+              ticks: { color: "#8b9a92", font: { family: "JetBrains Mono", size: 10 }, maxRotation: 0, autoSkip: true, maxTicksLimit: muchos ? 10 : 12 },
+              border: { color: "rgba(43,255,136,.15)" },
+            },
+            y: {
+              beginAtZero: true,
+              ticks: { color: "#8b9a92", font: { family: "JetBrains Mono", size: 10 }, precision: 0, callback: function (v) { return formato(v); } },
+              grid: { color: "rgba(43,255,136,.07)" },
+              border: { display: false },
+            },
+          },
+        },
+        plugins: [brillo],
+      });
+    });
+  })();
+</script>
+{% endmacro %}
+
+{% macro filtro_fechas(desde, hasta, extra={}) %}
+<form method="get" class="pc-filtro-fechas">
+  {% for k, v in extra.items() %}{% if v %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endif %}{% endfor %}
+  <input type="date" name="desde" value="{{ desde }}" class="form-control" aria-label="Desde">
+  <input type="date" name="hasta" value="{{ hasta }}" class="form-control" aria-label="Hasta">
+  <button class="btn btn-pc btn-sm px-3">Aplicar</button>
+</form>
+{% endmacro %}

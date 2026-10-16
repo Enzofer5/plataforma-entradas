@@ -1,0 +1,134 @@
+{% extends "admin/_base.html" %}
+{% block title %}Cobros{% endblock %}
+{% block titulo_admin %}Cobros y liquidaciones{% endblock %}
+{% block contenido_admin %}
+<div class="row g-4 mb-4">
+  <div class="col-lg-7">
+    <div class="mc-panel h-100">
+      <h5 class="mb-3">¿Con qué cuenta se cobra?</h5>
+      <form method="post" class="d-flex flex-column gap-2">
+        <input type="hidden" name="accion" value="modo">
+        <label class="d-flex gap-2 p-3 rounded border {{ 'border-success bg-success-subtle' if modo == 'centralizado' }}">
+          <input type="radio" name="modo" value="centralizado" class="form-check-input mt-1" {{ 'checked' if modo == 'centralizado' }}>
+          <span>
+            <strong>Cobro centralizado</strong> <span class="badge bg-info text-dark">provisorio</span><br>
+            <span class="small text-muted">Todos los pagos entran a <strong>tu</strong> cuenta de Mercado Pago. Vos le transferís a cada organizador lo suyo (abajo ves cuánto). Los organizadores no tienen que conectar nada.</span>
+          </span>
+        </label>
+        <label class="d-flex gap-2 p-3 rounded border {{ 'border-success bg-success-subtle' if modo == 'organizador' }}">
+          <input type="radio" name="modo" value="organizador" class="form-check-input mt-1" {{ 'checked' if modo == 'organizador' }}>
+          <span>
+            <strong>Cada organizador cobra en su cuenta</strong><br>
+            <span class="small text-muted">Cada organizador conecta su Mercado Pago y la plata le llega directo; a vos te llega solo el recargo, automáticamente.</span>
+          </span>
+        </label>
+        <button class="btn btn-primary align-self-start mt-1">Guardar</button>
+      </form>
+    </div>
+  </div>
+  <div class="col-lg-5">
+    <div class="mc-panel h-100">
+      <h5 class="mb-3">Tu cuenta de Mercado Pago</h5>
+      {% macro estado(valor, nombre) %}
+        <div class="d-flex justify-content-between align-items-center py-1">
+          <span class="small">{{ nombre }}</span>
+          {% if valor == "produccion" %}<span class="badge bg-success">Producción ✓</span>
+          {% elif valor == "prueba" %}<span class="badge bg-warning text-dark">De prueba</span>
+          {% else %}<span class="badge bg-danger">Falta</span>{% endif %}
+        </div>
+      {% endmacro %}
+      {{ estado(token, "Access Token (MP_ACCESS_TOKEN)") }}
+      {{ estado(public_key, "Public Key (MP_PUBLIC_KEY)") }}
+      {% if modo == "centralizado" and (token == "falta" or public_key == "falta") %}
+        <div class="alert alert-warning small mt-3 mb-0">
+          Faltan tus credenciales en el archivo <code>.env</code>: hasta que las cargues, las
+          compras usan el <strong>pago simulado</strong> (sin plata real). Copialas de Mercado
+          Pago Developers → tu aplicación → Credenciales de producción, y reiniciá la app.
+        </div>
+      {% elif modo == "centralizado" %}
+        <p class="small text-success mt-3 mb-0">✓ Listo para cobrar con el formulario de pago dentro de la página.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="mc-panel mb-4">
+  <h5 class="mb-1">Lo que le debés a cada organizador</h5>
+  <p class="text-muted small">
+    Por cada venta cobrada con tu cuenta: el <strong>cargo por servicio es tuyo, entero</strong>. Al organizador le
+    corresponde el precio de sus entradas (menos cupones) <strong>menos los costos de cobro</strong> de esa venta
+    (comisión de Mercado Pago y retenciones de impuestos), menos lo que ya le transferiste.
+  </p>
+  <div class="table-responsive">
+    <table class="table align-middle mb-0">
+      <thead>
+        <tr>
+          <th>Organizador</th><th>Datos para transferir</th>
+          <th class="text-end">Vendió</th><th class="text-end">Costos MP</th><th class="text-end">A transferir</th>
+          <th class="text-end">Transferido</th><th class="text-end">Pendiente</th>
+          <th class="text-end">Tu ganancia</th>
+          <th style="min-width: 260px;">Registrar transferencia</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in saldos %}
+          <tr>
+            <td>
+              <div class="fw-semibold">{{ s.nombre }}</div>
+              <div class="small text-muted">{{ s.email }} · {{ s.compras }} compra{{ 's' if s.compras != 1 }}</div>
+            </td>
+            <td class="small">{{ s.datos_cobro or '—' }}{% if not s.datos_cobro and s.pendiente > 0 %} <span class="badge bg-warning text-dark">sin cargar</span>{% endif %}</td>
+            <td class="text-end">{{ s.vendido|pesos }}</td>
+            <td class="text-end text-danger small" title="Comisión de Mercado Pago {{ s.comision|pesos }} + impuestos retenidos {{ s.impuestos|pesos }}">
+              −{{ (s.comision + s.impuestos)|pesos }}
+            </td>
+            <td class="text-end">{{ s.a_transferir|pesos }}</td>
+            <td class="text-end">{{ s.transferido|pesos }}</td>
+            <td class="text-end fw-bold {{ 'text-danger' if s.pendiente > 0 }}">{{ s.pendiente|pesos }}</td>
+            <td class="text-end text-success fw-semibold">{{ s.recargos|pesos }}</td>
+            <td>
+              <form method="post" class="d-flex gap-1">
+                <input type="hidden" name="accion" value="transferencia">
+                <input type="hidden" name="organizador_id" value="{{ s.id }}">
+                <input type="number" name="monto" class="form-control form-control-sm" min="0.01" step="0.01"
+                       value="{{ '%.2f'|format(s.pendiente) if s.pendiente > 0 }}" placeholder="Monto" required style="max-width: 110px;">
+                <input type="text" name="nota" class="form-control form-control-sm" placeholder="Nota (opcional)" maxlength="200">
+                <button class="btn btn-sm btn-outline-primary">Registrar</button>
+              </form>
+            </td>
+          </tr>
+        {% else %}
+          <tr><td colspan="9" class="text-muted">Todavía no hay organizadores.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <p class="small text-muted mt-2 mb-0">
+    "Registrar" solo anota la transferencia acá (la tenés que hacer vos desde tu Mercado Pago o tu banco). El organizador la ve en "Mi cuenta".
+  </p>
+</div>
+
+{% if historial %}
+<div class="mc-panel">
+  <h5 class="mb-3">Últimas transferencias registradas</h5>
+  <table class="table table-sm align-middle mb-0">
+    <tbody>
+      {% for t in historial %}
+        <tr>
+          <td class="small">{{ t.fecha_local[:10]|fecha_es }} {{ t.fecha_local[11:16] }}</td>
+          <td>{{ t.organizador_nombre }}</td>
+          <td class="small text-muted">{{ t.nota or '' }}</td>
+          <td class="text-end fw-semibold">{{ t.monto|pesos }}</td>
+          <td class="text-end">
+            <form method="post" action="{{ url_for('admin.anular_transferencia', liquidacion_id=t.id) }}"
+                  onsubmit="return confirm('¿Anular esta transferencia? El monto vuelve al saldo pendiente.');">
+              <button class="btn btn-sm btn-link text-danger p-0">Anular</button>
+            </form>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+{% endblock %}

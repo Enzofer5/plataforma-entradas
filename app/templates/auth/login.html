@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Ingresar{% endblock %}
+{% block content %}
+<div class="pc-auth">
+  <div class="pc-auth-cabecera">
+    <div class="bienvenida">Bienvenido/a de nuevo</div>
+    <h1>Ingresar</h1>
+    <p class="text-muted mb-0">Accedé a tus entradas o a tu panel de productor.</p>
+  </div>
+  <form method="post" class="pc-card" action="{{ url_for('auth.login', next=request.args.get('next')) }}">
+    <div class="mb-3">
+      <label class="form-label">Email</label>
+      <input type="email" name="email" class="form-control" value="{{ email or '' }}" required autofocus autocomplete="email">
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Contraseña</label>
+      <input type="password" name="password" class="form-control" required autocomplete="current-password">
+    </div>
+    <button type="submit" class="btn btn-pc w-100 py-2">Ingresar</button>
+    <p class="text-center small mt-3 mb-0 text-muted">¿No tenés cuenta? <a href="{{ url_for('cuentas.registro', next=request.args.get('next')) }}">Creá tu cuenta para comprar entradas</a></p>
+  </form>
+  <p class="text-center small text-muted mt-3">
+    ¿Sos productor y no tenés cuenta? Pedísela a MatrixCode.
+  </p>
+</div>
+{% endblock %}

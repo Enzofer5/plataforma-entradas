@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Tu entrada — {{ evento.nombre }}{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-5">
+    <div class="card">
+      <div class="card-body text-center">
+        <h5 class="card-title">{{ evento.nombre }}</h5>
+        <p class="text-muted mb-1">
+          {{ evento.fecha|fecha_es }}{% if evento.hora %} — {{ evento.hora }}{% endif %}
+        </p>
+        <p class="text-muted mb-3">{{ evento.lugar }}</p>
+
+        <img src="{{ url_for('entradas.qr_entrada', codigo=entrada.codigo_unico) }}"
+             alt="Código QR de la entrada" class="img-fluid mb-3" style="max-width: 260px;">
+
+        <p class="mb-1"><strong>{{ entrada.tipo_nombre }}</strong></p>
+        <p class="text-muted small mb-3">{{ orden.comprador_nombre }}</p>
+
+        <code class="d-block mb-3">{{ entrada.codigo_unico }}</code>
+
+        {% if entrada.estado == "usada" %}
+          <span class="badge bg-secondary">Ya utilizada</span>
+        {% else %}
+          <span class="badge bg-success">Válida</span>
+        {% endif %}
+      </div>
+    </div>
+    <p class="text-muted small text-center mt-3">
+      Mostrá este código QR en la entrada del evento.
+    </p>
+  </div>
+</div>
+{% endblock %}

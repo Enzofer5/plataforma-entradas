@@ -1,0 +1,45 @@
+{# Menú lateral único del dueño: ve lo de cada productor (ORGANIZADOR) y lo de la plataforma (MATRIXCODE). #}
+{% import "_iconos.html" as ui %}
+{% macro menu_dueno(ep) -%}
+  {% set org_id = menu_org_actual %}
+  <div class="grupo">Organizador</div>
+  {% if menu_orgs %}
+    <label class="pc-menu-org">
+      <span class="visually-hidden">Productor</span>
+      <select onchange="if (this.value) location.href = this.value" aria-label="Elegí el productor">
+        {% for o in menu_orgs %}
+          <option value="{{ url_for('admin.ver_organizador', organizador_id=o.id, a=url_for('eventos.panel')) }}" {{ 'selected' if o.id == org_id }}>{{ o.nombre }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    {% set org_eps = {
+      "eventos.panel": ("dashboard", "Dashboard", ()),
+      "eventos.listado": ("eventos", "Eventos", ("eventos.nuevo", "eventos.detalle", "eventos.editar", "eventos.tipos_entrada", "eventos.reporte", "eventos.cupones", "eventos.validar")),
+      "eventos.ventas": ("ventas", "Ventas", ()),
+      "eventos.compradores": ("compradores", "Compradores", ()),
+      "eventos.ingreso": ("ingreso", "Control de ingreso", ()),
+      "eventos.cupones_inicio": ("cupones", "Cupones", ()),
+      "auth.cuenta": ("mercadopago", "Mercado Pago", ()),
+    } %}
+    {% for endpoint in ["eventos.panel", "eventos.listado", "eventos.ventas", "eventos.compradores", "eventos.ingreso", "eventos.cupones_inicio", "auth.cuenta"] %}
+      {% set icono, texto, activos = org_eps[endpoint] %}
+      <a href="{{ url_for('admin.ver_organizador', organizador_id=org_id, a=url_for(endpoint)) }}"
+         class="{{ 'activo' if g.viendo_como_dueno and (ep == endpoint or ep in activos) }}">{{ ui.icono(icono) }}<span>{{ texto }}</span></a>
+    {% endfor %}
+  {% else %}
+    <a href="{{ url_for('admin.nuevo_organizador') }}">{{ ui.icono("compradores") }}<span>Crear el primer productor</span></a>
+  {% endif %}
+
+  <div class="grupo">MatrixCode</div>
+  {% for endpoint, icono, texto in [
+      ("admin.resumen", "estrella", "Panel MatrixCode"),
+      ("admin.cobros", "cobros", "Cobros"),
+      ("admin.recargos", "comisiones", "Comisiones"),
+      ("admin.organizadores", "clientes", "Clientes"),
+      ("admin.nuevo_organizador", "compradores", "Nuevo productor"),
+      ("admin.eventos", "eventos", "Todos los eventos"),
+      ("admin.cuenta", "config", "Configuración")] %}
+    <a href="{{ url_for(endpoint) }}" class="{{ 'activo' if ep == endpoint }}">{{ ui.icono(icono) }}<span>{{ texto }}</span></a>
+  {% endfor %}
+  <a href="{{ url_for('admin.logout') }}">{{ ui.icono("salir") }}<span>Salir</span></a>
+{%- endmacro %}

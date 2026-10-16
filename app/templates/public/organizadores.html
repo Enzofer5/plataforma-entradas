@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% import "_iconos.html" as ui %}
+{% block title %}Vendé tus entradas{% endblock %}
+{% block content %}
+<div class="pc-hero-caja mb-4">
+  <div class="pc-mono small mb-3" style="color: var(--pc-verde); letter-spacing: .14em;">PASSCODE PARA ORGANIZADORES</div>
+  <h1 class="mb-3">Vendé las entradas<br>de tu fiesta</h1>
+  <p class="mx-auto mb-4" style="max-width: 560px; color: #cfdcd4;">
+    Publicá tu evento en minutos, cobrá con Mercado Pago y controlá el ingreso escaneando
+    QR desde el celular.
+  </p>
+  <div class="d-flex flex-wrap justify-content-center gap-2">
+    {% if g.organizador %}
+      <a href="{{ url_for('eventos.nuevo') }}" class="btn btn-pc px-4">+ Crear un evento</a>
+      <a href="{{ url_for('eventos.panel') }}" class="btn btn-pc-borde px-4">Ir a mi panel</a>
+    {% else %}
+      <a href="{{ url_for('auth.registro') }}" class="btn btn-pc px-4">Registrar mi productora</a>
+      <a href="{{ url_for('auth.login') }}" class="btn btn-pc-borde px-4">Ya tengo cuenta</a>
+    {% endif %}
+  </div>
+  <p class="small text-muted mt-3 mb-0">
+    Sin costo fijo para vos: Passcode cobra un cargo por servicio
+    ({{ describir_recargo(recargo.porcentaje, recargo.fijo) }})
+    que paga el comprador sobre el precio de cada entrada.
+  </p>
+</div>
+
+<div class="row g-3 mb-4">
+  {% set beneficios = [
+    ("mercadopago", "Cobro con Mercado Pago",
+      "Nosotros cobramos por vos con Mercado Pago y te transferimos lo vendido. Ves cada venta y cada transferencia en tu panel."
+        if modo_cobro == "centralizado" else
+      "El dinero de las entradas entra directo en tu cuenta de Mercado Pago."),
+    ("qr", "Entradas con QR", "Cada entrada es única. Se valida en la puerta con el celular y no se puede usar dos veces."),
+    ("entradas", "Tipos de entrada", "General, VIP, preventa: cada uno con su precio y su cupo. Se marcan solos cuando se agotan."),
+    ("cupones", "Cupones de descuento", "Creá códigos con % o monto fijo, límite de usos y vencimiento. Compartí un link que ya los trae cargados."),
+    ("tiempo", "Ventas en tiempo real", "Dashboard con ventas, ingresos, compradores y exportación a Excel."),
+    ("ingreso", "Control de ingreso", "Escaneás el QR con la cámara del celular y ves en el momento quién entró."),
+  ] %}
+  {% for icono, titulo, texto in beneficios %}
+    <div class="col-md-6 col-lg-4">
+      <div class="pc-beneficio">
+        <div class="icono">{{ ui.icono(icono) }}</div>
+        <div>
+          <h6>{{ titulo }}</h6>
+          <p>{{ texto }}</p>
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+
+<div class="pc-card" id="como-funciona">
+  <h4 class="mb-3">¿Cómo empiezo?</h4>
+  <ol class="mb-0" style="line-height: 2;">
+    <li><strong>Registrá tu productora</strong> con tus datos.</li>
+    <li><strong>Armá tu evento:</strong> flyer, fecha, lugar y tipos de entrada.</li>
+    {% if modo_cobro == "centralizado" %}
+      <li><strong>Cargá tu alias o CBU</strong> en "Mi cuenta" para recibir tus ventas.</li>
+    {% else %}
+      <li><strong>Conectá tu cuenta de Mercado Pago</strong> desde "Mi cuenta".</li>
+    {% endif %}
+    <li><strong>Publicá y compartí el link.</strong> ¡A vender!</li>
+  </ol>
+</div>
+{% endblock %}

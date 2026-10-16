@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Crear cuenta de dueño{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6 col-lg-5">
+    <div class="mc-panel">
+      <div class="text-center mb-3">
+        <div style="font-size: 2.2rem;">🛡️</div>
+        <h1 class="h4 mb-1">Creá la cuenta de dueño</h1>
+        <p class="text-muted small mb-0">
+          Es la cuenta que administra la plataforma: recargos, organizadores y eventos.
+        </p>
+      </div>
+      <div class="alert alert-warning small">
+        <strong>Solo puede haber una.</strong> Apenas la crees, esta página se desactiva y
+        nadie más va a poder crear otra. Guardá bien el email y la contraseña.
+      </div>
+      <form method="post">
+        <div class="mb-3">
+          <label class="form-label">Tu nombre</label>
+          <input type="text" name="nombre" class="form-control" value="{{ nombre }}" required autofocus>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Email</label>
+          <input type="email" name="email" class="form-control" value="{{ email }}" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Contraseña</label>
+          <input type="password" name="password" class="form-control" required minlength="8" autocomplete="new-password">
+          <div class="form-text">Mínimo 8 caracteres.</div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Repetí la contraseña</label>
+          <input type="password" name="password_confirm" class="form-control" required minlength="8" autocomplete="new-password">
+        </div>
+        <button type="submit" class="btn btn-primary w-100">Crear cuenta de dueño</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

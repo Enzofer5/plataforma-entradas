@@ -1,0 +1,40 @@
+{% extends "eventos/_panel.html" %}
+{% block title %}Compradores{% endblock %}
+{% block panel %}
+<div class="pc-panel-cabecera">
+  <div>
+    <div class="seccion">Organizador</div>
+    <h1>Compradores</h1>
+  </div>
+  <form method="get" class="pc-buscador">
+    <span class="prompt">&gt;</span>
+    <input type="search" name="q" value="{{ q }}" placeholder="buscar por nombre o email" aria-label="Buscar comprador">
+    <button class="btn btn-pc btn-sm">Buscar</button>
+  </form>
+</div>
+
+<div class="pc-card p-0">
+  {% if compradores %}
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead><tr><th class="ps-3">Comprador</th><th class="text-end">Compras</th><th class="text-end">Entradas</th><th class="text-end">Eventos</th><th>Última compra</th><th class="text-end pe-3">Gastó</th></tr></thead>
+        <tbody>
+          {% for c in compradores %}
+            <tr>
+              <td class="ps-3">{{ c.nombre }}<div class="small text-muted">{{ c.email }}{% if c.dni %} · DNI {{ c.dni }}{% endif %}</div></td>
+              <td class="text-end">{{ c.compras }}</td>
+              <td class="text-end">{{ c.entradas }}</td>
+              <td class="text-end">{{ c.eventos }}</td>
+              <td class="small pc-mono">{{ c.ultima[:10]|fecha_es }}</td>
+              <td class="text-end pe-3 fw-bold">{{ c.gastado|pesos }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <p class="small text-muted px-3 py-2 mb-0">{{ compradores|length }} comprador{{ 'es' if compradores|length != 1 }} · ordenados por lo que gastaron.</p>
+  {% else %}
+    <p class="text-muted text-center py-5 mb-0 pc-mono">&gt; todavía no hay compradores{% if q %} con esa búsqueda{% endif %}</p>
+  {% endif %}
+</div>
+{% endblock %}

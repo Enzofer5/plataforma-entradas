@@ -1,0 +1,73 @@
+{% extends "admin/_base.html" %}
+{% block title %}Organizadores{% endblock %}
+{% block titulo_admin %}Clientes (productores){% endblock %}
+{% block acciones_admin %}<a href="{{ url_for('admin.nuevo_organizador') }}" class="btn btn-pc btn-sm px-3">+ Nuevo productor</a>{% endblock %}
+{% block contenido_admin %}
+{% if not organizadores %}
+  <div class="mc-panel text-center text-muted py-5">Todavía no hay productores. <a href="{{ url_for('admin.nuevo_organizador') }}">Creá el primero</a>.</div>
+{% else %}
+  <div class="mc-panel p-0">
+    <div class="table-responsive">
+      <table class="table align-middle mb-0">
+        <thead>
+          <tr>
+            <th class="ps-3">Organizador</th>
+            <th>Mercado Pago</th>
+            <th>Eventos</th>
+            <th class="text-end">Vendió</th>
+            <th class="text-end">Tu ganancia</th>
+            <th>Recargo</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for o in organizadores %}
+            <tr class="{{ 'table-danger' if o.suspendido }}">
+              <td class="ps-3">
+                <div class="fw-semibold">{{ o.nombre }}{% if o.suspendido %} <span class="badge bg-danger">Suspendido</span>{% endif %}</div>
+                <div class="small text-muted">{{ o.email }} · desde {{ o.creado_en[:10]|fecha_es }}</div>
+              </td>
+              <td>
+                {% if o.mp_access_token and o.mp_public_key %}
+                  <span class="badge bg-success">Conectado</span>
+                {% elif o.mp_access_token %}
+                  <span class="badge bg-warning text-dark" title="Conectado antes del formulario de pago integrado: sus compradores pagan en la página de Mercado Pago">Conectado (sin formulario)</span>
+                {% else %}
+                  <span class="badge bg-secondary">No conectado</span>
+                {% endif %}
+              </td>
+              <td>{{ o.publicados }} / {{ o.eventos }}</td>
+              <td class="text-end">{{ o.cobrado|pesos }}</td>
+              <td class="text-end fw-semibold">{{ o.ganancia|pesos }}</td>
+              <td class="small">
+                {% if o.recargo_porcentaje is not none or o.recargo_fijo is not none %}
+                  <span class="badge bg-info text-dark">Especial</span>
+                  {{ describir_recargo(o.recargo_porcentaje if o.recargo_porcentaje is not none else recargo.porcentaje, o.recargo_fijo if o.recargo_fijo is not none else recargo.fijo) }}
+                {% else %}
+                  <span class="text-muted">General</span>
+                {% endif %}
+              </td>
+              <td class="text-end pe-3">
+                <div class="d-flex justify-content-end gap-1">
+                <a href="{{ url_for('admin.ver_organizador', organizador_id=o.id) }}" class="btn btn-sm btn-outline-success">Ver panel</a>
+                <form method="post" action="{{ url_for('admin.suspender_organizador', organizador_id=o.id) }}"
+                      onsubmit='return confirm({{ (("¿Reactivar a " if o.suspendido else "¿Suspender a ") ~ o.nombre ~ "?")|tojson }});'>
+                  <button class="btn btn-sm {{ 'btn-outline-success' if o.suspendido else 'btn-outline-danger' }}">
+                    {{ 'Reactivar' if o.suspendido else 'Suspender' }}
+                  </button>
+                </form>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <p class="text-muted small mt-3">
+    Suspender una cuenta cierra su sesión, le impide entrar y oculta todos sus eventos. Las
+    entradas que ya vendió siguen siendo válidas. Para cambiarle el recargo, andá a
+    <a href="{{ url_for('admin.recargos') }}">Recargos</a>.
+  </p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% import "_iconos.html" as ui %}
+{% block title %}Comprar entradas — {{ evento.nombre }}{% endblock %}
+{% block content %}
+{% set hay_stock = namespace(si=false) %}
+
+<a href="{{ url_for('public.evento_detalle', slug=evento.slug) }}" class="pc-volver">← Volver al evento</a>
+
+<div class="pc-compra-evento">
+  {% if evento.imagen_url %}<img src="{{ evento.imagen_url }}" alt="{{ evento.nombre }}">{% endif %}
+  <div>
+    <div class="pc-mono small text-uppercase" style="color: var(--pc-verde)">Comprá tus entradas</div>
+    <h1>{{ evento.nombre }}</h1>
+    <div class="pc-compra-meta">
+      <span>{{ ui.icono("eventos") }} {{ evento.fecha|fecha_es }}{% if evento.hora %} · {{ evento.hora }} hs{% endif %}</span>
+      {% if evento.lugar %}<span>📍 {{ evento.lugar }}</span>{% endif %}
+    </div>
+  </div>
+</div>
+
+<ol class="pc-pasos-compra" aria-label="Pasos de la compra">
+  <li class="activo"><b>1</b> Entradas y datos</li>
+  <li><b>2</b> Revisás el total</li>
+  <li><b>3</b> Pagás con Mercado Pago</li>
+</ol>
+
+<form method="post" id="form-compra" class="pc-compra" novalidate
+      data-recargo-pct="{{ recargo.porcentaje or 0 }}" data-recargo-fijo="{{ recargo.fijo or 0 }}">
+  <div class="pc-compra-izq">
+
+    <section class="pc-card">
+      <h2 class="pc-compra-h">Elegí tus entradas</h2>
+      {% for tipo in tipos %}
+        {% set disponible = tipo.stock_total - tipo.stock_vendido %}
+        {% if disponible > 0 %}{% set hay_stock.si = true %}{% endif %}
+        <div class="pc-tipo {{ 'agotado' if disponible <= 0 }}" data-tipo
+             data-nombre="{{ tipo.nombre }}" data-precio="{{ tipo.precio }}">
+          <div class="pc-tipo-info">
+            <div class="pc-tipo-nombre">{{ tipo.nombre }}</div>
+            <div class="pc-tipo-precio">{{ tipo.precio|pesos if tipo.precio > 0 else 'Gratis' }}</div>
+            {% if disponible <= 0 %}<span class="pc-stock off">Agotado</span>
+            {% elif disponible <= 10 %}<span class="pc-stock poco">¡Quedan {{ disponible }}!</span>
+            {% else %}<span class="pc-stock">Disponible</span>{% endif %}
+          </div>
+          <div class="pc-stepper">
+            <button type="button" data-menos aria-label="Una entrada {{ tipo.nombre }} menos" {{ 'disabled' if disponible <= 0 }}>−</button>
+            <input type="number" inputmode="numeric" name="cantidad_{{ tipo.id }}" min="0"
+                   max="{{ [disponible, 0]|max }}" value="{{ cantidades.get(tipo.id, 0) }}"
+                   aria-label="Cantidad de {{ tipo.nombre }}" {{ 'disabled' if disponible <= 0 }}>
+            <button type="button" data-mas aria-label="Una entrada {{ tipo.nombre }} más" {{ 'disabled' if disponible <= 0 }}>+</button>
+          </div>
+        </div>
+      {% endfor %}
+      {% if not hay_stock.si %}
+        <p class="text-center mt-3 mb-0" style="color: var(--pc-ambar)">Las entradas de este evento están agotadas.</p>
+      {% endif %}
+
+      <details class="pc-cupon" {{ 'open' if cupon }}>
+        <summary>🏷️ ¿Tenés un cupón de descuento?</summary>
+        <div class="pc-cupon-campo">
+          <input type="text" name="cupon" id="cupon" class="form-control text-uppercase" placeholder="Ej: PROMO20"
+                 value="{{ cupon or '' }}" autocomplete="off" aria-label="Código de cupón">
+          <div class="form-text">El descuento se aplica en el siguiente paso, antes de pagar.</div>
+        </div>
+      </details>
+    </section>
+
+    <section class="pc-card mt-3">
+      <h2 class="pc-compra-h">Tus datos</h2>
+      <p class="text-muted small mb-3">Las entradas con QR quedan en <a href="{{ url_for('cuentas.mis_entradas') }}">Mis entradas</a> y te llegan a tu email.</p>
+      <div class="mb-3">
+        <label class="form-label" for="nombre">Nombre y apellido <span class="pc-req">*</span></label>
+        <input type="text" id="nombre" name="nombre" class="form-control" value="{{ nombre }}"
+               autocomplete="name" placeholder="Como figura en tu DNI" required>
+      </div>
+      <div class="row g-3">
+        <div class="col-md-7">
+          <label class="form-label" for="email">Email de tu cuenta</label>
+          <input type="email" id="email" name="email" class="form-control" value="{{ email }}" readonly>
+        </div>
+        <div class="col-md-5">
+          <label class="form-label" for="dni">DNI <span class="text-muted small">(opcional)</span></label>
+          <input type="text" id="dni" name="dni" class="form-control" value="{{ dni }}"
+                 inputmode="numeric" placeholder="Sin puntos">
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <aside class="pc-compra-der">
+    <div class="pc-card pc-resumen">
+      <h2 class="pc-compra-h">Resumen</h2>
+      <ul class="pc-resumen-items" data-items><li class="text-muted">Todavía no elegiste entradas.</li></ul>
+      <div class="pc-resumen-fila"><span>Entradas</span><span data-subtotal>$0</span></div>
+      <div class="pc-resumen-fila"><span>Cargo por servicio{% if recargo.porcentaje %} ({{ "%g"|format(recargo.porcentaje) }}%){% endif %}</span><span data-cargo>$0</span></div>
+      <div class="pc-resumen-total"><span>Total</span><strong data-total>$0</strong></div>
+      <p class="pc-resumen-nota">Si usás un cupón, el descuento se ve en el siguiente paso.</p>
+      <button type="submit" class="btn btn-pc w-100 py-2" data-continuar {{ 'disabled' if not hay_stock.si }}>Continuar →</button>
+      <div class="pc-seguro">🔒 Pago seguro con Mercado Pago</div>
+    </div>
+  </aside>
+
+  <div class="pc-barra-movil" aria-hidden="true">
+    <div><small>Total</small><strong data-total>$0</strong></div>
+    <button type="submit" class="btn btn-pc px-4" data-continuar tabindex="-1">Continuar</button>
+  </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/comprar.js', v=version_estaticos) }}"></script>
+{% endblock %}

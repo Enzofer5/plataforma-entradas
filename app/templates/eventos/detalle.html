@@ -1,0 +1,129 @@
+{% extends "eventos/_panel.html" %}
+{% from "eventos/_evento_nav.html" import cabecera_evento %}
+{% import "_iconos.html" as ui %}
+{% block title %}{{ evento.nombre }}{% endblock %}
+{% block panel %}
+{{ cabecera_evento(evento) }}
+{% set publicado = evento.estado == "publicado" and not evento.bloqueado %}
+{% set url_publica = url_for('public.evento_detalle', slug=evento.slug, _external=True) %}
+
+<!-- Estado y acciones principales -->
+<div class="pc-card mb-3">
+  <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+    <div>
+      {% if evento.bloqueado %}
+        <strong class="text-danger">Pausado por la plataforma.</strong>
+        <div class="small text-muted">No se ve en la página pública. Escribinos para saber más.</div>
+      {% elif publicado %}
+        <strong>✓ Está a la venta.</strong>
+        <div class="small text-muted text-break">Compartí este link: <span class="pc-mono">{{ url_publica }}</span></div>
+      {% else %}
+        <strong>Es un borrador.</strong>
+        <div class="small text-muted">Nadie lo ve todavía. {% if not tipos %}Agregá al menos un tipo de entrada y publicalo.{% else %}Cuando esté listo, publicalo.{% endif %}</div>
+      {% endif %}
+    </div>
+    <div class="d-grid d-md-flex gap-2 flex-shrink-0">
+      {% if publicado %}
+        <button type="button" class="btn btn-pc" id="copiar-link" data-url="{{ url_publica }}">🔗 Copiar link</button>
+        <a href="{{ url_for('public.evento_detalle', slug=evento.slug) }}" target="_blank" class="btn btn-pc-borde">Ver página ↗</a>
+      {% endif %}
+      {% if not evento.bloqueado %}
+        <form method="post" action="{{ url_for('eventos.publicar', evento_id=evento.id) }}" class="d-grid"
+              {% if publicado %}onsubmit="return confirm('¿Pasar a borrador? El evento deja de verse y no se puede comprar.');"{% endif %}>
+          <button type="submit" class="btn {{ 'btn-outline-warning' if publicado else 'btn-pc' }}">
+            {{ 'Pasar a borrador' if publicado else '🚀 Publicar' }}
+          </button>
+        </form>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Métricas -->
+{% set pct = (vendidas * 100 / stock_total) if stock_total else 0 %}
+<div class="row g-3 mb-3">
+  <div class="col-6 col-lg-3">
+    <div class="pc-kpi">
+      <div class="etiqueta">Vendidas</div>
+      <div class="valor">{{ vendidas }}<span class="fs-6 text-muted"> / {{ stock_total }}</span></div>
+      <div class="progress mt-1" style="height: 5px;"><div class="progress-bar bg-mc" style="width: {{ pct|round(0) }}%;"></div></div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="pc-kpi">
+      <div class="etiqueta">Recaudado</div>
+      <div class="valor">{{ recaudado|pesos }}</div>
+      <div class="detalle">{{ compras }} compra{{ 's' if compras != 1 }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="pc-kpi">
+      <div class="etiqueta">Ingresaron</div>
+      <div class="valor">{{ usadas }}<span class="fs-6 text-muted"> / {{ vendidas }}</span></div>
+      <div class="detalle">validadas en la puerta</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="pc-kpi">
+      <div class="etiqueta">Cupones activos</div>
+      <div class="valor">{{ cupones_activos }}</div>
+      <div class="detalle">{{ tipos|length }} tipo{{ 's' if tipos|length != 1 }} de entrada</div>
+    </div>
+  </div>
+</div>
+
+<!-- Accesos: todo lo que se puede hacer con el evento -->
+<div class="pc-acciones">
+  {% for url, icono, titulo, texto, destacado in [
+    (url_for('eventos.tipos_entrada', evento_id=evento.id), "entradas", "Tipos de entrada", "Precios y cupos", not tipos),
+    (url_for('eventos.validar', evento_id=evento.id), "ingreso", "Validar en la puerta", "Escanear QR", publicado and vendidas > 0),
+    (url_for('eventos.reporte', evento_id=evento.id), "dashboard", "Reporte", "Ventas y asistencia", False),
+    (url_for('eventos.ventas', evento=evento.id), "ventas", "Ventas", "Compras y compradores", False),
+    (url_for('eventos.cupones', evento_id=evento.id), "cupones", "Cupones", "Descuentos y promos", False),
+    (url_for('eventos.editar', evento_id=evento.id), "config", "Editar evento", "Datos, fecha y flyer", False),
+    (url_for('eventos.reporte_csv', evento_id=evento.id), "descarga", "Descargar Excel", "Todas las compras", False),
+    (url_for('public.evento_detalle', slug=evento.slug), "eventos", "Ver página", "Como la ve el público", False),
+  ] %}
+    {% if not (titulo == "Ver página" and not publicado) %}
+      <a href="{{ url }}" class="pc-accion {{ 'destacada' if destacado }}" {% if titulo == "Ver página" %}target="_blank"{% endif %}>
+        <span class="icono">{{ ui.icono(icono) }}</span>
+        <span class="texto"><strong>{{ titulo }}</strong><small>{{ texto }}</small></span>
+      </a>
+    {% endif %}
+  {% endfor %}
+</div>
+
+{% if tipos %}
+<div class="pc-card mt-3">
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <h5 class="mb-0">Entradas</h5>
+    <a href="{{ url_for('eventos.tipos_entrada', evento_id=evento.id) }}" class="small">Administrar</a>
+  </div>
+  {% for t in tipos %}
+    {% set p = (t.stock_vendido * 100 / t.stock_total) if t.stock_total else 0 %}
+    <div class="py-2 {{ 'border-top' if not loop.first }}" style="border-color: var(--pc-borde) !important;">
+      <div class="d-flex justify-content-between small mb-1">
+        <span><strong>{{ t.nombre }}</strong> · {{ 'Gratis' if t.precio == 0 else t.precio|pesos }}</span>
+        <span class="pc-mono">{{ t.stock_vendido }} / {{ t.stock_total }}</span>
+      </div>
+      <div class="progress" style="height: 5px;"><div class="progress-bar bg-mc" style="width: {{ p|round(0) }}%;"></div></div>
+    </div>
+  {% endfor %}
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+  (function () {
+    const b = document.getElementById("copiar-link");
+    if (!b) return;
+    b.addEventListener("click", function () {
+      navigator.clipboard.writeText(b.dataset.url).then(function () {
+        b.textContent = "✓ Link copiado";
+        setTimeout(function () { b.textContent = "🔗 Copiar link"; }, 2000);
+      });
+    });
+  })();
+</script>
+{% endblock %}

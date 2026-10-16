@@ -1,0 +1,74 @@
+{% extends "admin/_base.html" %}
+{% block title %}Eventos{% endblock %}
+{% block titulo_admin %}Todos los eventos{% endblock %}
+{% block contenido_admin %}
+{% if not eventos %}
+  <div class="mc-panel text-center text-muted py-5">Todavía no hay eventos.</div>
+{% else %}
+  <div class="mc-panel p-0">
+    <div class="table-responsive">
+      <table class="table align-middle mb-0">
+        <thead>
+          <tr>
+            <th class="ps-3">Evento</th>
+            <th>Organizador</th>
+            <th>Fecha</th>
+            <th>Estado</th>
+            <th>Vendidas</th>
+            <th class="text-end">Tu ganancia</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for e in eventos %}
+            <tr class="{{ 'table-danger' if e.bloqueado }}">
+              <td class="ps-3">
+                <div class="d-flex align-items-center gap-2">
+                  {% if e.imagen_url %}<img src="{{ e.imagen_url }}" alt="" class="mc-miniatura">{% endif %}
+                  <div>
+                    <div class="fw-semibold">{{ e.nombre }}</div>
+                    <div class="small text-muted">📍 {{ e.lugar }}</div>
+                  </div>
+                </div>
+              </td>
+              <td>{{ e.organizador_nombre }}{% if e.organizador_suspendido %} <span class="badge bg-danger">Suspendido</span>{% endif %}</td>
+              <td class="small">{{ e.fecha|fecha_es }}</td>
+              <td>
+                {% if e.bloqueado %}
+                  <span class="badge bg-danger">Pausado por vos</span>
+                {% elif e.organizador_suspendido %}
+                  <span class="badge bg-secondary" title="No se ve porque el organizador está suspendido">Oculto</span>
+                {% elif e.estado == "publicado" %}
+                  <span class="badge bg-success">Publicado</span>
+                {% else %}
+                  <span class="badge bg-warning text-dark">Borrador</span>
+                {% endif %}
+              </td>
+              <td>{{ e.vendidas }} / {{ e.stock_total }}</td>
+              <td class="text-end fw-semibold">{{ e.ganancia|pesos }}</td>
+              <td class="text-end pe-3">
+                <div class="d-flex justify-content-end gap-1">
+                  {% if e.estado == "publicado" and not e.bloqueado and not e.organizador_suspendido %}
+                    <a href="{{ url_for('public.evento_detalle', slug=e.slug) }}" target="_blank" class="btn btn-sm btn-outline-secondary">Ver</a>
+                  {% endif %}
+                  <a href="{{ url_for('admin.ver_organizador', organizador_id=e.organizador_id, a=url_for('eventos.detalle', evento_id=e.id)) }}" class="btn btn-sm btn-outline-success">Ver ventas</a>
+                  <form method="post" action="{{ url_for('admin.bloquear_evento', evento_id=e.id) }}"
+                        onsubmit='return confirm({{ (("¿Habilitar «" if e.bloqueado else "¿Pausar «") ~ e.nombre ~ "»?")|tojson }});'>
+                    <button class="btn btn-sm {{ 'btn-outline-success' if e.bloqueado else 'btn-outline-danger' }}">
+                      {{ 'Habilitar' if e.bloqueado else 'Pausar' }}
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <p class="text-muted small mt-3">
+    Pausar un evento lo saca de la página pública y el organizador no lo puede volver a
+    publicar hasta que lo habilites. Las entradas que ya se vendieron siguen siendo válidas.
+  </p>
+{% endif %}
+{% endblock %}

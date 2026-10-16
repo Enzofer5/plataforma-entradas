@@ -1,0 +1,238 @@
+{% extends "base.html" %}
+{% block title %}Pagar — {{ evento.nombre }}{% endblock %}
+{% block content %}
+<div class="row justify-content-center g-4">
+  <!-- ============ Resumen ============ -->
+  <div class="col-lg-5 order-lg-2">
+    <div class="mc-panel">
+      <h5 class="mb-1">Resumen de tu compra</h5>
+      <p class="text-muted small mb-3">{{ evento.nombre }} — {{ evento.fecha|fecha_es }}{% if evento.hora %} · {{ evento.hora }} hs{% endif %}</p>
+      <ul class="list-unstyled mb-3">
+        {% for item in items %}
+        <li class="d-flex justify-content-between gap-3 py-1">
+          <span>{{ item.cantidad }}x {{ item.tipo_nombre }}</span>
+          <span>{{ (item.cantidad * item.precio_unitario)|pesos }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+      <div class="d-flex justify-content-between gap-3 border-top pt-2">
+        <span>Subtotal entradas</span>
+        <span>{{ (orden.subtotal if orden.subtotal is not none else orden.total)|pesos }}</span>
+      </div>
+      {% if orden.descuento %}
+      <div class="d-flex justify-content-between gap-3 text-success fw-semibold">
+        <span>Descuento{% if cupon %} <span class="mc-cupon-codigo small">{{ cupon.codigo }}</span>{% endif %}</span>
+        <span>−{{ orden.descuento|pesos }}</span>
+      </div>
+      {% endif %}
+      {% if orden.recargo_total %}
+      <div class="d-flex justify-content-between gap-3 text-muted small">
+        <span>Cargo por servicio</span>
+        <span>{{ orden.recargo_total|pesos }}</span>
+      </div>
+      {% endif %}
+      <div class="d-flex justify-content-between gap-3 border-top mt-2 pt-2 fs-5">
+        <strong>Total</strong>
+        <strong>{{ orden.total|pesos }}</strong>
+      </div>
+      <p class="text-muted small mt-2 mb-0">A nombre de {{ orden.comprador_nombre }} · {{ orden.comprador_email }}</p>
+    </div>
+  </div>
+
+  <!-- ============ Pago ============ -->
+  <div class="col-lg-7 order-lg-1">
+    {% if modo == "formulario" %}
+      <div class="mc-panel">
+        <h4 class="mb-1">Elegí cómo pagar</h4>
+        <p class="text-muted small mb-3">
+          🔒 Pago seguro procesado por Mercado Pago. Los datos de tu tarjeta van directo a
+          Mercado Pago, nunca quedan guardados en este sitio.
+        </p>
+        <div id="mensaje-pago" class="alert d-none" role="alert"></div>
+        <div id="paymentBrick_container"></div>
+        <div id="cargando-formulario" class="text-center text-muted py-4">
+          <div class="spinner-border spinner-border-sm me-2" role="status"></div> Cargando medios de pago…
+        </div>
+      </div>
+
+    {% elif modo == "pendiente" %}
+      <div class="mc-panel text-center">
+        <div style="font-size: 2.5rem;">⏳</div>
+        <h4 class="mt-2">Tu pago está pendiente</h4>
+        <p class="text-muted">{{ mensaje }}</p>
+        {% if orden.mp_ticket_url %}
+          <a href="{{ orden.mp_ticket_url }}" target="_blank" rel="noopener" class="btn btn-neon btn-lg mb-3">
+            Ver / imprimir cupón de pago
+          </a>
+          <p class="small text-muted">Guardá este link: también te lo podés pedir desde el mail de Mercado Pago.</p>
+        {% endif %}
+        <a href="{{ url_for('compras.estado', codigo=orden.codigo) }}" class="btn btn-outline-secondary">Ya pagué, revisar estado</a>
+      </div>
+
+    {% elif modo == "sin_stock" %}
+      <div class="mc-panel text-center">
+        <div style="font-size: 2.5rem;">😕</div>
+        <h4 class="mt-2">Se agotaron las entradas</h4>
+        <p class="text-muted mb-0">
+          Mientras pagabas, se vendieron las últimas entradas que elegiste.
+          {% if orden.estado == "reembolsada" %}Ya te devolvimos el pago completo por Mercado Pago.{% else %}Escribile al organizador para que te devuelva el pago.{% endif %}
+        </p>
+      </div>
+
+    {% elif modo == "error_mp" %}
+      <div class="mc-panel">
+        <div class="alert alert-danger mb-3">
+          No pudimos conectar con Mercado Pago para iniciar el pago. Probá de nuevo en un momento.
+        </div>
+        <a href="{{ url_for('compras.pagar', codigo=orden.codigo) }}" class="btn btn-primary w-100">Reintentar</a>
+      </div>
+
+    {% else %}
+      <div class="mc-panel">
+        <h4 class="mb-3">Pago</h4>
+        <div class="alert alert-warning small">
+          Todavía no está configurado el cobro con Mercado Pago — este botón simula el pago
+          para probar el circuito completo.
+        </div>
+        <form method="post">
+          <button type="submit" class="btn btn-success btn-lg w-100">
+            Pagar (simulado) {{ orden.total|pesos }}
+          </button>
+        </form>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if modo == "formulario" %}
+<script src="https://sdk.mercadopago.com/js/v2"></script>
+<!-- Identifica el dispositivo del comprador para el antifraude de Mercado Pago (deja "deviceId" global). -->
+<script src="https://www.mercadopago.com/v2/security.js" view="checkout" output="deviceId"></script>
+<script>
+  (function () {
+    const URL_PROCESAR = {{ url_for('compras.procesar', codigo=orden.codigo)|tojson }};
+    const URL_ERROR = {{ url_for('compras.error_formulario', codigo=orden.codigo)|tojson }};
+    const mensaje = document.getElementById("mensaje-pago");
+    const cargando = document.getElementById("cargando-formulario");
+    const mp = new MercadoPago({{ mp_public_key|tojson }}, { locale: "es-AR" });
+    let controlador = null;
+
+    function mostrar(tipo, texto, link) {
+      mensaje.className = "alert alert-" + tipo;
+      mensaje.textContent = texto;
+      if (link) {
+        const a = document.createElement("a");
+        a.href = link;
+        a.target = "_blank";
+        a.rel = "noopener";
+        a.className = "btn btn-sm btn-dark ms-2";
+        a.textContent = "Ver cupón de pago";
+        mensaje.appendChild(a);
+      }
+      mensaje.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+
+    async function crearFormulario() {
+      const settings = {
+        initialization: {
+          amount: {{ orden.total|float|tojson }},
+          {% if preference_id %}preferenceId: {{ preference_id|tojson }},{% endif %}
+          payer: { email: {{ orden.comprador_email|tojson }} },
+        },
+        customization: {
+          visual: { style: { theme: "default", customVariables: { baseColor: "#17c964" } } },
+          paymentMethods: {
+            creditCard: "all",
+            debitCard: "all",
+            prepaidCard: "all",
+            ticket: "all",
+            {% if preference_id %}mercadoPago: "all",{% endif %}
+            maxInstallments: 12,
+          },
+        },
+        callbacks: {
+          onReady: function () { cargando.classList.add("d-none"); },
+          onError: function (error) {
+            console.error(error);
+            cargando.classList.add("d-none");
+            if (error && error.type === "critical") {
+              mostrar("danger", "No pudimos cargar los medios de pago. Revisá tu conexión y recargá la página.");
+            } else if (error) {
+              // Errores "no críticos" (por ejemplo, Mercado Pago no pudo validar la
+              // tarjeta): antes se ignoraban y el botón Pagar parecía no hacer nada.
+              const motivos = {
+                card_token_creation_failed: "Mercado Pago no pudo validar los datos de la tarjeta. Revisalos o probá con otra.",
+                get_payment_methods_failed: "No pudimos obtener los medios de pago de Mercado Pago. Recargá la página.",
+                get_installments_failed: "No pudimos calcular las cuotas para esta tarjeta. Probá con otra o recargá la página.",
+                get_card_bin_payment_methods_failed: "Mercado Pago no reconoce esta tarjeta. Probá con otra.",
+                get_card_issuers_failed: "No pudimos identificar el banco de la tarjeta. Probá con otra.",
+                missing_payment_information: "Faltan datos del pago. Revisá el formulario.",
+              };
+              mostrar("warning", (motivos[error.cause] || "Mercado Pago informó un problema con el pago.") +
+                " (código: " + (error.cause || "desconocido") + (error.message ? " — " + error.message : "") + ")");
+              fetch(URL_ERROR, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ tipo: error.type, causa: error.cause, mensaje: error.message }),
+              }).catch(function () {});
+            }
+          },
+          onSubmit: function ({ selectedPaymentMethod, formData }) {
+            // Dinero en cuenta de Mercado Pago: el formulario lleva al comprador a
+            // Mercado Pago y vuelve solo; no hay nada que mandar a nuestro servidor.
+            if (selectedPaymentMethod === "wallet_purchase") {
+              return Promise.resolve();
+            }
+            mensaje.className = "alert d-none";
+            return fetch(URL_PROCESAR, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "X-Device-Id": window.deviceId || "" },
+              body: JSON.stringify(formData),
+            })
+              .then(function (r) { return r.json(); })
+              .then(function (r) {
+                if (r.estado === "aprobado") {
+                  mostrar("success", r.mensaje + " Te llevamos a tus entradas…");
+                  window.location.href = r.redirect;
+                } else if (r.estado === "pendiente") {
+                  mostrar("warning", r.mensaje, r.ticket_url);
+                  setTimeout(function () { window.location.href = r.redirect; }, r.ticket_url ? 8000 : 3000);
+                } else {
+                  mostrar("danger", r.mensaje);
+                  // Se rearma el formulario para que pueda reintentar con otra tarjeta.
+                  controlador.unmount();
+                  crearFormulario();
+                }
+              })
+              .catch(function () {
+                mostrar("danger", "Se cortó la conexión. Revisá tu internet y volvé a intentar.");
+                controlador.unmount();
+                crearFormulario();
+              });
+          },
+        },
+      };
+      controlador = await mp.bricks().create("payment", "paymentBrick_container", settings);
+    }
+
+    // Si Mercado Pago no responde (sin conexión, clave inválida), no dejar al comprador
+    // mirando "Cargando…" para siempre.
+    setTimeout(function () {
+      if (!cargando.classList.contains("d-none")) {
+        cargando.innerHTML = 'No pudimos cargar los medios de pago. <a href="" class="ms-1">Reintentar</a>';
+        cargando.classList.remove("text-muted");
+        cargando.classList.add("text-danger");
+      }
+    }, 15000);
+
+    crearFormulario().catch(function (error) {
+      console.error(error);
+      cargando.classList.add("d-none");
+      mostrar("danger", "No pudimos cargar los medios de pago. Revisá tu conexión y recargá la página.");
+    });
+  })();
+</script>
+{% endif %}
+{% endblock %}

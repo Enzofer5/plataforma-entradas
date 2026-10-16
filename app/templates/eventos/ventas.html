@@ -1,0 +1,68 @@
+{% extends "eventos/_panel.html" %}
+{% import "_grafico.html" as graf %}
+{% block title %}Ventas{% endblock %}
+{% block panel %}
+<div class="pc-panel-cabecera">
+  <div>
+    <div class="seccion">Organizador</div>
+    <h1>Ventas</h1>
+  </div>
+</div>
+
+<form method="get" class="pc-card mb-3 d-flex flex-wrap align-items-end gap-2">
+  <div>
+    <label class="form-label mb-1">Evento</label>
+    <select name="evento" class="form-select form-select-sm" style="min-width: 200px;">
+      <option value="">Todos</option>
+      {% for e in mis_eventos %}<option value="{{ e.id }}" {{ 'selected' if evento_id == e.id }}>{{ e.nombre }}</option>{% endfor %}
+    </select>
+  </div>
+  <div>
+    <label class="form-label mb-1">Comprador</label>
+    <input type="search" name="q" value="{{ q }}" class="form-control form-control-sm" placeholder="nombre o email">
+  </div>
+  <div>
+    <label class="form-label mb-1">Desde</label>
+    <input type="date" name="desde" value="{{ desde }}" class="form-control form-control-sm">
+  </div>
+  <div>
+    <label class="form-label mb-1">Hasta</label>
+    <input type="date" name="hasta" value="{{ hasta }}" class="form-control form-control-sm">
+  </div>
+  <button class="btn btn-pc btn-sm px-3">Filtrar</button>
+  {% if evento_id %}
+    <a href="{{ url_for('eventos.reporte_csv', evento_id=evento_id) }}" class="btn btn-pc-borde btn-sm ms-auto">⬇ Excel de este evento</a>
+  {% endif %}
+</form>
+
+<div class="row g-3 mb-3">
+  <div class="col-sm-4"><div class="pc-kpi"><div class="etiqueta">Compras</div><div class="valor">{{ ventas|length }}</div></div></div>
+  <div class="col-sm-4"><div class="pc-kpi"><div class="etiqueta">Entradas</div><div class="valor">{{ entradas }}</div></div></div>
+  <div class="col-sm-4"><div class="pc-kpi"><div class="etiqueta">Vendido (neto de cupones)</div><div class="valor">{{ total|pesos }}</div></div></div>
+</div>
+
+<div class="pc-card p-0">
+  {% if ventas %}
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead><tr><th class="ps-3">Fecha</th><th>Comprador</th><th>Evento</th><th>Entradas</th><th>Cupón</th><th class="text-end pe-3">Neto</th></tr></thead>
+        <tbody>
+          {% for v in ventas %}
+            <tr>
+              <td class="ps-3 small pc-mono">{{ v.fecha_local[:10]|fecha_es }}<br>{{ v.fecha_local[11:16] }}</td>
+              <td>{{ v.comprador_nombre }}<div class="small text-muted">{{ v.comprador_email }}{% if v.comprador_dni %} · DNI {{ v.comprador_dni }}{% endif %}</div></td>
+              <td class="small"><a href="{{ url_for('eventos.reporte', evento_id=v.evento_id) }}">{{ v.evento }}</a></td>
+              <td class="small">{{ v.detalle }}</td>
+              <td>{% if v.cupon_codigo %}<span class="mc-cupon-codigo small">{{ v.cupon_codigo }}</span>{% endif %}</td>
+              <td class="text-end pe-3 fw-bold">{{ v.neto|pesos }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% if ventas|length >= 300 %}<p class="small text-muted px-3 py-2 mb-0">Se muestran las 300 más recientes. Achicá el período o descargá el Excel de cada evento.</p>{% endif %}
+  {% else %}
+    <p class="text-muted text-center py-5 mb-0 pc-mono">&gt; no hay ventas con estos filtros</p>
+  {% endif %}
+</div>
+{% endblock %}

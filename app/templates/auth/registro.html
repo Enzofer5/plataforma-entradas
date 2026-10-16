@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Registrá tu productora{% endblock %}
+{% block content %}
+<div class="pc-auth">
+  <div class="pc-auth-cabecera">
+    <div class="bienvenida">Passcode para organizadores</div>
+    <h1>Registrate</h1>
+    <p class="text-muted mb-0">Es gratis y en un minuto estás publicando tu evento.</p>
+  </div>
+  <form method="post" class="pc-card">
+    <div class="mb-3">
+      <label class="form-label">Nombre o productora</label>
+      <input type="text" name="nombre" class="form-control" value="{{ nombre or '' }}" required autofocus>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Email</label>
+      <input type="email" name="email" class="form-control" value="{{ email or '' }}" required autocomplete="email">
+    </div>
+    <div class="row g-2 mb-3">
+      <div class="col-sm-6">
+        <label class="form-label">Contraseña</label>
+        <input type="password" name="password" class="form-control" required minlength="6" autocomplete="new-password">
+      </div>
+      <div class="col-sm-6">
+        <label class="form-label">Repetila</label>
+        <input type="password" name="password_confirm" class="form-control" required minlength="6" autocomplete="new-password">
+      </div>
+    </div>
+    <button type="submit" class="btn btn-pc w-100 py-2">Crear cuenta gratis</button>
+    <p class="text-center small mt-3 mb-0 text-muted">¿Ya tenés cuenta? <a href="{{ url_for('auth.login') }}">Ingresá</a></p>
+  </form>
+  <ul class="pc-lista-flecha small mt-4 mx-auto" style="max-width: 360px;">
+    <li>Publicar tu evento no tiene costo fijo</li>
+    <li>Entradas con QR único y control de ingreso</li>
+    <li>Cupones y reportes de ventas en tiempo real</li>
+  </ul>
+</div>
+{% endblock %}

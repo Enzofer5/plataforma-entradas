@@ -1,0 +1,159 @@
+{% extends "admin/_base.html" %}
+{% block title %}Recargos{% endblock %}
+{% block titulo_admin %}Recargos por servicio{% endblock %}
+{% block contenido_admin %}
+<div class="alert alert-light border small">
+  El recargo es lo que <strong>paga el comprador</strong> encima del precio de las entradas y lo que
+  <strong>ganás vos</strong>: Mercado Pago lo separa solo y lo deposita en tu cuenta. Puede ser un
+  porcentaje, un monto fijo por entrada, o las dos cosas. Si un evento o un organizador tiene un
+  recargo especial, se usa ese; si no, el general. Los cambios se aplican a las compras nuevas.
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-5">
+    <form method="post" class="mc-panel mb-4">
+      <input type="hidden" name="accion" value="general">
+      <h5 class="mb-3">Recargo general</h5>
+      <div class="row g-2">
+        <div class="col-6">
+          <label class="form-label">Porcentaje</label>
+          <div class="input-group">
+            <input type="number" name="porcentaje" id="sim-porcentaje" class="form-control" min="0" max="100" step="0.1"
+                   value="{{ '%g'|format(recargo.porcentaje) }}" required>
+            <span class="input-group-text">%</span>
+          </div>
+        </div>
+        <div class="col-6">
+          <label class="form-label">Fijo por entrada</label>
+          <div class="input-group">
+            <span class="input-group-text">$</span>
+            <input type="number" name="fijo" id="sim-fijo" class="form-control" min="0" step="1"
+                   value="{{ '%g'|format(recargo.fijo) }}" required>
+          </div>
+        </div>
+      </div>
+      <div class="mt-3 p-3 rounded" style="background: rgba(57,255,140,.08); border: 1px dashed var(--mc-verde);">
+        <div class="small fw-semibold mb-2">Simulador: 2 entradas de
+          <input type="number" id="sim-precio" value="10000" min="0" step="500" class="form-control form-control-sm d-inline-block" style="width: 110px;">
+        </div>
+        <div class="d-flex justify-content-between small"><span>Precio de las entradas</span><span id="sim-base">—</span></div>
+        <div class="d-flex justify-content-between small"><span>Recargo (tu ganancia)</span><strong id="sim-recargo">—</strong></div>
+        <div class="d-flex justify-content-between small border-top mt-1 pt-1"><span>Paga el comprador</span><strong id="sim-total">—</strong></div>
+      </div>
+      <button type="submit" class="btn btn-primary w-100 mt-3">Guardar recargo general</button>
+    </form>
+  </div>
+
+  <div class="col-lg-7">
+    <div class="mc-panel mb-4">
+      <h5 class="mb-1">Recargo especial para un organizador</h5>
+      <p class="text-muted small">Por ejemplo, un productor grande al que le cobrás menos. Dejá un campo vacío para usar el general en ese valor.</p>
+      <form method="post" class="row g-2 align-items-end">
+        <input type="hidden" name="accion" value="organizador">
+        <div class="col-md-5">
+          <label class="form-label small">Organizador</label>
+          <select name="objetivo_id" class="form-select" required>
+            <option value="">Elegí…</option>
+            {% for o in organizadores %}<option value="{{ o.id }}">{{ o.nombre }} ({{ o.email }})</option>{% endfor %}
+          </select>
+        </div>
+        <div class="col-6 col-md-2">
+          <label class="form-label small">%</label>
+          <input type="number" name="porcentaje" class="form-control" min="0" max="100" step="0.1" placeholder="{{ '%g'|format(recargo.porcentaje) }}">
+        </div>
+        <div class="col-6 col-md-2">
+          <label class="form-label small">$ fijo</label>
+          <input type="number" name="fijo" class="form-control" min="0" step="1" placeholder="{{ '%g'|format(recargo.fijo) }}">
+        </div>
+        <div class="col-md-3"><button class="btn btn-outline-primary w-100">Guardar</button></div>
+      </form>
+      {% if org_especiales %}
+        <table class="table table-sm align-middle mt-3 mb-0">
+          <tbody>
+            {% for o in org_especiales %}
+              <tr>
+                <td>{{ o.nombre }}</td>
+                <td><strong>{{ describir_recargo(o.recargo_porcentaje if o.recargo_porcentaje is not none else recargo.porcentaje, o.recargo_fijo if o.recargo_fijo is not none else recargo.fijo) }}</strong></td>
+                <td class="text-end">
+                  <form method="post" class="d-inline">
+                    <input type="hidden" name="accion" value="quitar_organizador">
+                    <input type="hidden" name="objetivo_id" value="{{ o.id }}">
+                    <button class="btn btn-sm btn-outline-danger">Quitar</button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% endif %}
+    </div>
+
+    <div class="mc-panel">
+      <h5 class="mb-1">Recargo especial para un evento</h5>
+      <p class="text-muted small">Tiene prioridad sobre el del organizador. Útil para un evento benéfico o una promoción.</p>
+      <form method="post" class="row g-2 align-items-end">
+        <input type="hidden" name="accion" value="evento">
+        <div class="col-md-5">
+          <label class="form-label small">Evento</label>
+          <select name="objetivo_id" class="form-select" required>
+            <option value="">Elegí…</option>
+            {% for e in eventos %}<option value="{{ e.id }}">{{ e.nombre }} — {{ e.fecha|fecha_es }} ({{ e.organizador_nombre }})</option>{% endfor %}
+          </select>
+        </div>
+        <div class="col-6 col-md-2">
+          <label class="form-label small">%</label>
+          <input type="number" name="porcentaje" class="form-control" min="0" max="100" step="0.1" placeholder="—">
+        </div>
+        <div class="col-6 col-md-2">
+          <label class="form-label small">$ fijo</label>
+          <input type="number" name="fijo" class="form-control" min="0" step="1" placeholder="—">
+        </div>
+        <div class="col-md-3"><button class="btn btn-outline-primary w-100">Guardar</button></div>
+      </form>
+      {% if ev_especiales %}
+        <table class="table table-sm align-middle mt-3 mb-0">
+          <tbody>
+            {% for e in ev_especiales %}
+              <tr>
+                <td>{{ e.nombre }} <span class="text-muted small">({{ e.organizador_nombre }})</span></td>
+                <td>
+                  <strong>
+                    {% if e.recargo_porcentaje is not none %}{{ '%g'|format(e.recargo_porcentaje) }}%{% endif %}{% if e.recargo_porcentaje is not none and e.recargo_fijo is not none %} + {% endif %}{% if e.recargo_fijo is not none %}{{ e.recargo_fijo|pesos }} por entrada{% endif %}
+                  </strong>
+                </td>
+                <td class="text-end">
+                  <form method="post" class="d-inline">
+                    <input type="hidden" name="accion" value="quitar_evento">
+                    <input type="hidden" name="objetivo_id" value="{{ e.id }}">
+                    <button class="btn btn-sm btn-outline-danger">Quitar</button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  (function () {
+    const pesos = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 2 });
+    const campos = ["sim-porcentaje", "sim-fijo", "sim-precio"].map(function (id) { return document.getElementById(id); });
+    function calcular() {
+      const pct = parseFloat(campos[0].value) || 0;
+      const fijo = parseFloat(campos[1].value) || 0;
+      const base = (parseFloat(campos[2].value) || 0) * 2;
+      const recargo = base > 0 ? base * pct / 100 + fijo * 2 : 0;
+      document.getElementById("sim-base").textContent = pesos.format(base);
+      document.getElementById("sim-recargo").textContent = pesos.format(recargo);
+      document.getElementById("sim-total").textContent = pesos.format(base + recargo);
+    }
+    campos.forEach(function (c) { c.addEventListener("input", calcular); });
+    calcular();
+  })();
+</script>
+{% endblock %}

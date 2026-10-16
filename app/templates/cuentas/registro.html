@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Creá tu cuenta{% endblock %}
+{% block content %}
+<div class="pc-auth">
+  <div class="pc-auth-cabecera">
+    <div class="bienvenida">Para comprar entradas</div>
+    <h1>Creá tu cuenta</h1>
+    <p class="text-muted mb-0">Tus entradas con QR quedan guardadas en tu cuenta.</p>
+  </div>
+  <form method="post" class="pc-card" action="{{ url_for('cuentas.registro', next=next or None) }}">
+    <div class="mb-3">
+      <label class="form-label" for="nombre">Nombre y apellido</label>
+      <input type="text" id="nombre" name="nombre" class="form-control" value="{{ nombre }}" required autofocus
+             autocomplete="name" placeholder="Como figura en tu DNI">
+    </div>
+    <div class="mb-3">
+      <label class="form-label" for="email">Email</label>
+      <input type="email" id="email" name="email" class="form-control" value="{{ email }}" required
+             autocomplete="email" inputmode="email" placeholder="tu@email.com">
+    </div>
+    <div class="row g-2 mb-3">
+      <div class="col-sm-6">
+        <label class="form-label" for="dni">DNI <span class="text-muted small">(opcional)</span></label>
+        <input type="text" id="dni" name="dni" class="form-control" value="{{ dni }}" inputmode="numeric" placeholder="Sin puntos">
+      </div>
+      <div class="col-sm-6">
+        <label class="form-label" for="telefono">Celular <span class="text-muted small">(opcional)</span></label>
+        <input type="tel" id="telefono" name="telefono" class="form-control" value="{{ telefono }}" autocomplete="tel">
+      </div>
+    </div>
+    <div class="row g-2 mb-3">
+      <div class="col-sm-6">
+        <label class="form-label" for="password">Contraseña</label>
+        <input type="password" id="password" name="password" class="form-control" required minlength="8" autocomplete="new-password">
+      </div>
+      <div class="col-sm-6">
+        <label class="form-label" for="password_confirm">Repetila</label>
+        <input type="password" id="password_confirm" name="password_confirm" class="form-control" required minlength="8" autocomplete="new-password">
+      </div>
+    </div>
+    <div class="form-text mb-3">Mínimo 8 caracteres.</div>
+    <button type="submit" class="btn btn-pc w-100 py-2">Crear mi cuenta</button>
+    <p class="text-center small mt-3 mb-0 text-muted">¿Ya tenés cuenta? <a href="{{ url_for('auth.login', next=next or None) }}">Iniciá sesión</a></p>
+  </form>
+</div>
+{% endblock %}

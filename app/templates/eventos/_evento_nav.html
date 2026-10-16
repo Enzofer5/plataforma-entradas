@@ -1,0 +1,33 @@
+{# Cabecera de un evento + pestañas para moverse entre sus pantallas.
+   Uso: {% from "eventos/_evento_nav.html" import cabecera_evento %} {{ cabecera_evento(evento) }} #}
+{% macro cabecera_evento(evento) %}
+{% set ep = request.endpoint %}
+<a href="{{ url_for('eventos.listado') }}" class="btn btn-link px-0 mb-2">&larr; Mis eventos</a>
+<div class="pc-evento-cab">
+  <div class="pc-evento-cab-img">
+    {% if evento.imagen_url %}<img src="{{ evento.imagen_url }}" alt="">{% else %}<span>🎟️</span>{% endif %}
+  </div>
+  <div class="min-w-0 flex-fill">
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+      {% if evento.bloqueado %}<span class="badge bg-danger">Pausado por la plataforma</span>
+      {% elif evento.estado == "publicado" %}<span class="badge bg-success">Publicado</span>
+      {% else %}<span class="badge bg-warning">Borrador</span>{% endif %}
+    </div>
+    <h1 class="pc-evento-cab-titulo">{{ evento.nombre }}</h1>
+    <div class="small text-muted">{{ evento.fecha|fecha_texto }}{% if evento.hora %} · {{ evento.hora }} hs{% endif %} · {{ evento.lugar }}</div>
+  </div>
+</div>
+<nav class="pc-tabs" aria-label="Secciones del evento">
+  {% for endpoint, texto in [
+    ("eventos.detalle", "Resumen"),
+    ("eventos.tipos_entrada", "Entradas"),
+    ("eventos.cupones", "Cupones"),
+    ("eventos.reporte", "Reporte"),
+    ("eventos.validar", "Validar"),
+    ("eventos.editar", "Editar"),
+  ] %}
+    <a href="{{ url_for(endpoint, evento_id=evento.id) }}" class="{{ 'activo' if ep == endpoint }}"
+       {% if ep == endpoint %}aria-current="page"{% endif %}>{{ texto }}</a>
+  {% endfor %}
+</nav>
+{% endmacro %}

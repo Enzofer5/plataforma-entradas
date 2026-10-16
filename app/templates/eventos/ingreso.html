@@ -1,0 +1,35 @@
+{% extends "eventos/_panel.html" %}
+{% block title %}Control de ingreso{% endblock %}
+{% block panel %}
+<div class="pc-panel-cabecera">
+  <div>
+    <div class="seccion">Organizador</div>
+    <h1>Control de ingreso</h1>
+  </div>
+</div>
+<p class="text-muted">Elegí el evento y escaneá los QR en la puerta con la cámara del celular. Cada entrada se valida una sola vez.</p>
+
+<div class="row g-3">
+  {% for e in eventos %}
+    {% set pct = (e.usadas * 100 / e.vendidas) if e.vendidas else 0 %}
+    <div class="col-md-6">
+      <div class="pc-card h-100 d-flex flex-column">
+        <div class="d-flex justify-content-between gap-2">
+          <div>
+            <h5 class="mb-1">{{ e.nombre }}</h5>
+            <div class="small text-muted">{{ e.fecha|fecha_texto }}{% if e.hora %} · {{ e.hora }} hs{% endif %}</div>
+          </div>
+          {% if e.estado == "publicado" and not e.bloqueado %}<span class="badge bg-success align-self-start">Publicado</span>{% else %}<span class="badge bg-secondary align-self-start">{{ 'Pausado' if e.bloqueado else 'Borrador' }}</span>{% endif %}
+        </div>
+        <div class="my-3">
+          <div class="d-flex justify-content-between small mb-1"><span>Ingresaron</span><span class="pc-mono">{{ e.usadas }} / {{ e.vendidas }}</span></div>
+          <div class="progress" style="height: 6px;"><div class="progress-bar bg-mc" style="width: {{ pct|round(0) }}%;"></div></div>
+        </div>
+        <a href="{{ url_for('eventos.validar', evento_id=e.id) }}" class="btn btn-pc mt-auto">📷 Validar entradas</a>
+      </div>
+    </div>
+  {% else %}
+    <div class="col-12"><div class="pc-card text-muted">Todavía no tenés eventos. <a href="{{ url_for('eventos.nuevo') }}">Creá el primero</a>.</div></div>
+  {% endfor %}
+</div>
+{% endblock %}
